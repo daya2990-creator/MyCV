@@ -7,11 +7,11 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    // ERROR FIX: In Next.js 15, we must 'await' cookies()
     const cookieStore = await cookies()
     
+    // FIX: Wrap cookieStore in Promise.resolve() to satisfy Next.js 15 + Supabase types
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore 
+        cookies: () => Promise.resolve(cookieStore) 
     })
     
     await supabase.auth.exchangeCodeForSession(code)
