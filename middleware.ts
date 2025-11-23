@@ -4,29 +4,27 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+  
+  // Create a Supabase client configured to use cookies
   const supabase = createMiddlewareClient({ req, res })
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // If user is not signed in and tries to access /dashboard, redirect to login
-  if (!session && req.nextUrl.pathname.startsWith('/dashboard')) {
-    const redirectUrl = req.nextUrl.clone()
-    redirectUrl.pathname = '/login'
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // If user is signed in and tries to access /login, redirect to dashboard
-  if (session && req.nextUrl.pathname.startsWith('/login')) {
-    const redirectUrl = req.nextUrl.clone()
-    redirectUrl.pathname = '/dashboard'
-    return NextResponse.redirect(redirectUrl)
-  }
+  // Refresh session if expired - required for Server Components
+  // This prevents the user from being logged out randomly
+  await supabase.auth.getSession()
 
   return res
 }
 
+// Ensure the middleware is only called for relevant paths.
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|logo.svg).*)',
+  ],
 }
