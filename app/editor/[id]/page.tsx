@@ -150,7 +150,6 @@ export default function EditorPage() {
     setTimeout(() => textarea.focus(), 0);
   };
 
-  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -160,7 +159,6 @@ export default function EditorPage() {
   
   const moveSection = (index: number, direction: 'up' | 'down') => { const newSections = [...resume.sections]; if (direction === 'up' && index > 0) [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]]; else if (direction === 'down' && index < newSections.length - 1) [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]]; const newData = { ...resume, sections: newSections }; updateResume(newData); autoSave(newData); }
   const deleteSection = (id: string) => { if(!confirm('Delete section?')) return; const newData = { ...resume, sections: resume.sections.filter(s => s.id !== id) }; updateResume(newData); autoSave(newData); setActiveSectionId('basics'); }
-  
   const addPageBreak = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const breakSection: Section = { id, title: 'Page Break', type: 'break', isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -173,7 +171,10 @@ export default function EditorPage() {
   const removeItem = (sectionId: string, itemId: string) => { const newSections = resume.sections.map(s => { if (s.id !== sectionId) return s; return { ...s, items: s.items.filter(i => i.id !== itemId) }; }); updateResume({ ...resume, sections: newSections }); }
   const loadSample = () => { if(confirm('Overwrite with sample data?')) { updateResume(SAMPLE_RESUME); autoSave(SAMPLE_RESUME); } }
 
-  const handlePrint = useReactToPrint({ contentRef: componentRef, documentTitle: resume.basics.fullName || 'Resume' });
+  const handlePrint = useReactToPrint({ 
+    contentRef: componentRef, 
+    documentTitle: resume.basics.fullName || 'Resume' 
+  });
 
   const onDownloadClick = async () => {
     if (isPremium) { handlePrint(); return; }
@@ -203,9 +204,7 @@ export default function EditorPage() {
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin"/></div>
 
   const CurrentTemplate = TEMPLATES[selectedTemplate].component;
-  const pages: Section[][] = []; let currentPage: Section[] = []; 
-  resume.sections.forEach(section => { if (section.type === 'break') { pages.push(currentPage); currentPage = []; } else { currentPage.push(section); } }); 
-  if (currentPage.length > 0) pages.push(currentPage);
+  const pages = []; let currentPage: any[] = []; resume.sections.forEach(section => { if (section.type === 'break') { pages.push(currentPage); currentPage = []; } else { currentPage.push(section); } }); if (currentPage.length > 0) pages.push(currentPage);
 
   return (
     <div className="h-screen flex flex-col bg-slate-100 font-sans text-slate-800 overflow-hidden">
@@ -222,7 +221,7 @@ export default function EditorPage() {
          <div className="flex gap-2 items-center">
             {saving && <span className="text-xs text-slate-400 flex gap-1 items-center mr-2"><Loader2 size={12} className="animate-spin"/> Saving...</span>}
             {!isPremium && credits < 1 && <button onClick={() => router.push('/pricing')} className="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold flex gap-1 hover:bg-indigo-700"><Sparkles size={12}/> Upgrade</button>}
-            <button onClick={onDownloadClick} className="bg-slate-900 text-white px-3 py-1.5 rounded text-xs font-bold flex gap-2"><Download size={14}/> PDF</button>
+            <button onClick={onDownloadClick} className="bg-slate-900 text-white px-3 py-1.5 rounded text-xs font-bold flex gap-2"><Download size={14}/> Download</button>
          </div>
       </header>
 
@@ -284,7 +283,12 @@ export default function EditorPage() {
               <div className="absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6]">
                  <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                  <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10">
-                    <div ref={componentRef} className="text-slate-800"><div style={{ fontFamily: design.font }}><CurrentTemplate data={resume} theme={design} isPremium={isPremium} /></div></div>
+                    {/* PREVIEW CONTAINER */}
+                    <div ref={componentRef} className="text-slate-800">
+                       <div style={{ fontFamily: design.font }}>
+                          <CurrentTemplate data={resume} theme={design} isPremium={isPremium} />
+                       </div>
+                    </div>
                  </div>
               </div>
            )}
@@ -307,7 +311,7 @@ export default function EditorPage() {
                           {Object.entries(TEMPLATES)
                              .filter(([_, conf]: any) => templateCategory === 'all' || conf.category === templateCategory)
                              .map(([id, conf]: [string, any]) => (
-                             <button key={id} onClick={() => onSelectTemplate(id)} className={`relative p-3 border rounded-lg text-left transition-all hover:shadow-md ${selectedTemplate === id ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50' : 'hover:border-gray-300 border-gray-200'}`}>
+                             <button key={id} onClick={() => onSelectTemplate(id)} className={`relative p-3 border rounded-lg text-left transition-all hover:shadow-md ${selectedTemplate === id ? 'border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50' : 'hover:border-gray-300 border-gray-200'} ${!isPremium && conf.tier === 'premium' ? 'opacity-70 bg-gray-50' : ''}`}>
                                 <div className="flex items-center justify-between gap-2">
                                    <div className="flex items-center gap-2"><Layout size={14} className={selectedTemplate === id ? 'text-indigo-600' : 'text-slate-400'}/><span className={`text-xs font-bold truncate ${selectedTemplate === id ? 'text-indigo-700' : 'text-slate-600'}`}>{conf.name}</span></div>
                                    {conf.tier === 'premium' && !isPremium && <Lock size={12} className="text-amber-500"/>}
