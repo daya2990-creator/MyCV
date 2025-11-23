@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2, FileText, Zap, Download, Mail, HelpCircle } from 'lucide-react'
-import { AppLogo } from '../components/AppLogo' // FIXED IMPORT
+import { AppLogo } from '../components/AppLogo' 
 
 export default function LandingPage() {
   return (
@@ -144,10 +144,10 @@ export default function LandingPage() {
                <AppLogo size={24} textClassName="text-slate-700"/>
             </div>
             <p className="text-slate-500 text-sm mb-8">© 2024 MyCV.guru. Helping you land your dream job.</p>
-            <div className="flex justify-center gap-6 text-sm text-slate-500">
-               <a href="#" className="hover:text-slate-900">Terms of Service</a>
-               <a href="#" className="hover:text-slate-900">Privacy Policy</a>
-               <a href="mailto:support@mycv.guru" className="hover:text-slate-900">Support</a>
+            <div className="flex justify-center gap-6 text-sm text-slate-500 font-medium">
+               <Link href="/terms" className="hover:text-indigo-600 transition-colors">Terms of Service</Link>
+               <Link href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
+               <Link href="/support" className="hover:text-indigo-600 transition-colors">Support</Link>
             </div>
          </div>
       </footer>
