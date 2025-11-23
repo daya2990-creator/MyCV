@@ -86,7 +86,7 @@ const Input = ({ label, value, onChange }: any) => (
     <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>
     <input className="w-full p-3 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" value={value || ''} onChange={(e) => onChange(e.target.value)}/>
   </div>
-)
+);
 
 export default function EditorPage() {
   const params = useParams()
@@ -159,6 +159,7 @@ export default function EditorPage() {
   
   const moveSection = (index: number, direction: 'up' | 'down') => { const newSections = [...resume.sections]; if (direction === 'up' && index > 0) [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]]; else if (direction === 'down' && index < newSections.length - 1) [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]]; const newData = { ...resume, sections: newSections }; updateResume(newData); autoSave(newData); }
   const deleteSection = (id: string) => { if(!confirm('Delete section?')) return; const newData = { ...resume, sections: resume.sections.filter(s => s.id !== id) }; updateResume(newData); autoSave(newData); setActiveSectionId('basics'); }
+  
   const addPageBreak = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const breakSection: Section = { id, title: 'Page Break', type: 'break', isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -204,7 +205,9 @@ export default function EditorPage() {
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin"/></div>
 
   const CurrentTemplate = TEMPLATES[selectedTemplate].component;
-  const pages = []; let currentPage: any[] = []; resume.sections.forEach(section => { if (section.type === 'break') { pages.push(currentPage); currentPage = []; } else { currentPage.push(section); } }); if (currentPage.length > 0) pages.push(currentPage);
+  const pages: Section[][] = []; let currentPage: Section[] = []; 
+  resume.sections.forEach(section => { if (section.type === 'break') { pages.push(currentPage); currentPage = []; } else { currentPage.push(section); } }); 
+  if (currentPage.length > 0) pages.push(currentPage);
 
   return (
     <div className="h-screen flex flex-col bg-slate-100 font-sans text-slate-800 overflow-hidden">
@@ -283,12 +286,7 @@ export default function EditorPage() {
               <div className="absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6]">
                  <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                  <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10">
-                    {/* PREVIEW CONTAINER */}
-                    <div ref={componentRef} className="text-slate-800">
-                       <div style={{ fontFamily: design.font }}>
-                          <CurrentTemplate data={resume} theme={design} isPremium={isPremium} />
-                       </div>
-                    </div>
+                    <div ref={componentRef} className="text-slate-800"><div style={{ fontFamily: design.font }}><CurrentTemplate data={resume} theme={design} isPremium={isPremium} /></div></div>
                  </div>
               </div>
            )}
