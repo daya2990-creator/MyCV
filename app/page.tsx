@@ -1,24 +1,21 @@
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, FileText, Sparkles, Download } from 'lucide-react'
+import { ArrowRight, CheckCircle2, FileText, Zap, Download, Mail, HelpCircle } from 'lucide-react'
+import { AppLogo } from '../components/AppLogo' // FIXED IMPORT
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50">
+    <div className="min-h-screen bg-white font-sans text-slate-900">
+      
+      {/* 1. NAVBAR */}
+      <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-              <div className="bg-indigo-600 p-2 rounded-lg">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">ResumeAI</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link href="/login" className="text-gray-600 hover:text-gray-900 font-medium">
+            <AppLogo />
+            <div className="flex items-center gap-6">
+              <Link href="/login" className="text-slate-600 hover:text-slate-900 font-medium text-sm">
                 Log in
               </Link>
-              <Link href="/login" className="bg-indigo-600 text-white px-4 py-2 rounded-full font-medium hover:bg-indigo-700 transition-colors">
+              <Link href="/signup" className="bg-slate-900 text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-slate-800 transition-colors">
                 Get Started
               </Link>
             </div>
@@ -26,119 +23,134 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div className="relative overflow-hidden pt-16 pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 mb-8 border border-indigo-100">
-              <Sparkles size={16} />
-              <span className="text-sm font-medium">Powered by GPT-4 AI</span>
+      {/* 2. HERO SECTION */}
+      <div className="relative pt-20 pb-24 lg:pt-32 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-bold uppercase tracking-wider mb-8">
+              <Zap size={14} /> V 2.0 Now Live
             </div>
-            <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight">
-              Build a professional resume in <span className="text-indigo-600">minutes</span>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+              The Resume Builder that <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Gets You Hired.</span>
             </h1>
-            <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
-              Create ATS-friendly resumes with our AI-powered builder. 
-              No sign-up required to try. Daily passes available.
+            <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+              Create a professional, ATS-friendly resume in minutes. <br/>
+              First download is <strong>100% Free</strong>. No credit card required.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/login" className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200">
+              <Link href="/signup" className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 hover:scale-105">
                 Build My Resume <ArrowRight size={20} />
               </Link>
-              <Link href="#pricing" className="flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-full text-lg font-semibold hover:border-gray-400 transition-all">
-                View Pricing
+              <Link href="#features" className="flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-full text-lg font-bold hover:bg-slate-50 transition-all">
+                View Templates
               </Link>
             </div>
-          </div>
+            <div className="mt-12 flex items-center justify-center gap-8 text-sm font-medium text-slate-400">
+               <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500"/> 20+ Pro Templates</span>
+               <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500"/> ATS Optimized</span>
+               <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500"/> PDF Export</span>
+            </div>
         </div>
       </div>
 
-      {/* Features Grid */}
-      <div className="bg-gray-50 py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
-                <Sparkles className="text-blue-600" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">AI Writing Assistant</h3>
-              <p className="text-gray-500">Stuck on words? Let our AI rewrite your summary and bullet points to sound more professional.</p>
-            </div>
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-6">
-                <CheckCircle2 className="text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">ATS Friendly</h3>
-              <p className="text-gray-500">Our templates are designed to pass through Applicant Tracking Systems (ATS) used by 99% of companies.</p>
-            </div>
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
-                <Download className="text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Instant PDF Download</h3>
-              <p className="text-gray-500">Download high-quality PDFs instantly. No watermarks for premium users.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing Section */}
-      <div id="pricing" className="py-24">
+      {/* 3. FEATURES GRID */}
+      <div id="features" className="bg-slate-50 py-24 border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-gray-500">Pay only for what you need.</p>
+             <h2 className="text-3xl font-bold mb-4">Why Choose MyCV.guru?</h2>
+             <p className="text-slate-500">Everything you need to land your dream job.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+               { icon: FileText, title: "Professional Templates", desc: "Choose from 20+ recruiter-approved layouts designed to pass ATS systems." },
+               { icon: Zap, title: "Instant Customization", desc: "Change fonts, colors, and layouts with a single click. No design skills needed." },
+               { icon: Download, title: "Easy Export", desc: "Download high-quality PDFs instantly. Your first resume is on us." }
+            ].map((f, i) => (
+               <div key={i} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
+                     <f.icon size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{f.title}</h3>
+                  <p className="text-slate-500 leading-relaxed">{f.desc}</p>
+               </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. PRICING SECTION */}
+      <div className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Fair & Simple Pricing</h2>
+            <p className="text-slate-500">Start for free. Pay only when you're happy.</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Free Tier */}
-            <div className="border border-gray-200 rounded-2xl p-8 hover:border-indigo-300 transition-colors">
-              <h3 className="text-lg font-semibold text-gray-900">Free</h3>
-              <div className="my-4"><span className="text-4xl font-bold">₹0</span></div>
-              <ul className="space-y-3 mb-8 text-gray-600">
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> 1 Resume</li>
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> Basic Template</li>
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> Watermarked PDF</li>
+            {/* Free */}
+            <div className="border border-slate-200 rounded-3xl p-8 hover:border-indigo-200 transition-colors">
+              <h3 className="text-lg font-bold text-slate-900">Free Tier</h3>
+              <div className="my-4"><span className="text-4xl font-black">₹0</span></div>
+              <p className="text-sm text-slate-500 mb-6">Basic access to build your resume.</p>
+              <ul className="space-y-3 mb-8 text-sm text-slate-600 font-medium">
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Unlimited Resumes</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Basic Templates</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-slate-400"/> Watermark on Preview</li>
               </ul>
-              <Link href="/login" className="block text-center w-full py-3 rounded-lg border border-gray-200 font-medium hover:bg-gray-50">Get Started</Link>
+              <Link href="/signup" className="block text-center w-full py-3 rounded-xl bg-slate-100 text-slate-900 font-bold hover:bg-slate-200">Sign Up Free</Link>
             </div>
 
-            {/* Daily Pass - Highlighted */}
-            <div className="border-2 border-indigo-600 rounded-2xl p-8 relative bg-indigo-50/10 transform scale-105 shadow-xl">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                Most Popular
+            {/* Pay As You Go - Popular */}
+            <div className="border-2 border-indigo-600 rounded-3xl p-8 relative bg-slate-900 text-white shadow-2xl transform scale-105">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                Recommended
               </div>
-              <h3 className="text-lg font-semibold text-indigo-600">Daily Pass</h3>
+              <h3 className="text-lg font-bold text-indigo-300">Standard</h3>
               <div className="my-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">₹9</span>
-                <span className="text-gray-500">/day</span>
+                <span className="text-5xl font-black">₹39</span>
+                <span className="text-slate-400 text-sm">/ download</span>
               </div>
-              <ul className="space-y-3 mb-8 text-gray-600">
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> Unlimited Resumes</li>
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> All Premium Templates</li>
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> AI Writing Assistant</li>
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> No Watermarks</li>
+              <p className="text-sm text-slate-400 mb-6">Pay only for what you need.</p>
+              <ul className="space-y-3 mb-8 text-sm font-medium">
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> 1 Clean PDF Download</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> No Watermark</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> ATS-Friendly Format</li>
               </ul>
-              <Link href="/login" className="block text-center w-full py-3 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700">Buy 24h Pass</Link>
+              <Link href="/signup" className="block text-center w-full py-3 rounded-xl bg-white text-slate-900 font-bold hover:bg-indigo-50">Get Started</Link>
             </div>
 
             {/* Monthly */}
-            <div className="border border-gray-200 rounded-2xl p-8 hover:border-indigo-300 transition-colors">
-              <h3 className="text-lg font-semibold text-gray-900">Pro Monthly</h3>
+            <div className="border border-slate-200 rounded-3xl p-8 hover:border-indigo-200 transition-colors">
+              <h3 className="text-lg font-bold text-slate-900">Premium Pro</h3>
               <div className="my-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">₹199</span>
-                <span className="text-gray-500">/mo</span>
+                <span className="text-4xl font-black">₹99</span>
+                <span className="text-slate-500">/ month</span>
               </div>
-              <ul className="space-y-3 mb-8 text-gray-600">
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> Everything in Daily</li>
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> Priority Support</li>
-                <li className="flex gap-2"><CheckCircle2 size={18} className="text-green-500"/> Cover Letter Generator</li>
+              <p className="text-sm text-slate-500 mb-6">For serious job seekers.</p>
+              <ul className="space-y-3 mb-8 text-sm text-slate-600 font-medium">
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Unlimited Downloads</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Access All Templates</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Cover Letter Export</li>
               </ul>
-              <Link href="/login" className="block text-center w-full py-3 rounded-lg border border-gray-200 font-medium hover:bg-gray-50">Subscribe</Link>
+              <Link href="/signup" className="block text-center w-full py-3 rounded-xl bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100">Subscribe</Link>
             </div>
           </div>
         </div>
       </div>
+
+      {/* 5. FOOTER */}
+      <footer className="bg-slate-50 py-12 border-t border-slate-200">
+         <div className="max-w-7xl mx-auto px-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+               <AppLogo size={24} textClassName="text-slate-700"/>
+            </div>
+            <p className="text-slate-500 text-sm mb-8">© 2024 MyCV.guru. Helping you land your dream job.</p>
+            <div className="flex justify-center gap-6 text-sm text-slate-500">
+               <a href="#" className="hover:text-slate-900">Terms of Service</a>
+               <a href="#" className="hover:text-slate-900">Privacy Policy</a>
+               <a href="mailto:support@mycv.guru" className="hover:text-slate-900">Support</a>
+            </div>
+         </div>
+      </footer>
     </div>
   )
 }

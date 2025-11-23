@@ -3,34 +3,79 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { Check, Loader2, ArrowLeft, Download, FileText } from 'lucide-react'
+import { Check, Loader2, ArrowLeft, Zap, Crown, Mail, HelpCircle, FileText, Ban } from 'lucide-react'
 import Script from 'next/script'
 
-// Single Plan Configuration
-const PLAN = {
-  id: 'basic_plan',
-  name: 'Premium Pass',
-  price: 19,
-  description: 'Get your professional resume ready in minutes.',
-  features: [
-    '2 High-Quality PDF Downloads',
-    'Access to All 20+ Pro Templates',
-    'Remove "Created by" Watermark',
-    'Unlimited Edits & Previews'
-  ],
-  color: 'bg-slate-900 border-slate-800 text-white',
-  btnColor: 'bg-white text-slate-900 hover:bg-gray-100'
-}
+const PLANS = [
+  {
+    id: 'free',
+    name: 'Free Tier',
+    price: 0,
+    period: 'forever',
+    label: 'Basic',
+    features: [
+      'Create unlimited resumes',
+      'Access Basic Templates',
+      'Watermark on Preview',
+      'No PDF Export'
+    ],
+    color: 'bg-slate-50 border-slate-200 text-slate-800',
+    btnColor: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
+    icon: FileText,
+    popular: false
+  },
+  {
+    id: 'standard',
+    name: 'Standard',
+    price: 39,
+    period: 'one-time',
+    label: 'Pay Per Download',
+    features: [
+      '1 High-Quality PDF Download',
+      'No Watermark',
+      'Access Standard Templates',
+      'ATS-Friendly Format',
+      'Credits Never Expire'
+    ],
+    color: 'bg-blue-50 border-blue-200 text-blue-900',
+    btnColor: 'bg-blue-600 text-white hover:bg-blue-700',
+    icon: Zap,
+    popular: false
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    price: 99,
+    period: 'per month',
+    label: 'Best Value',
+    features: [
+      'Unlimited Clean Downloads',
+      'Access All 20+ Templates',
+      'No Watermarks',
+      'Cover Letter Export',
+      'High-Quality PDF & DOCX',
+      'Priority Support'
+    ],
+    color: 'bg-indigo-900 border-indigo-800 text-white',
+    btnColor: 'bg-indigo-500 text-white hover:bg-indigo-600',
+    icon: Crown,
+    popular: true
+  }
+]
 
 export default function PricingPage() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
-  const handlePayment = async () => {
-    setLoading(true)
+  const handleSelectPlan = async (plan: typeof PLANS[0]) => {
+    if (plan.price === 0) {
+       router.push('/dashboard');
+       return;
+    }
+
+    setLoading(plan.id)
     
-    // 1. Check Login
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
        router.push('/login')
@@ -38,25 +83,23 @@ export default function PricingPage() {
     }
 
     try {
-      // 2. Create Order
       const res = await fetch('/api/payment/create', { 
         method: 'POST',
         body: JSON.stringify({ 
-            amount: PLAN.price * 100, // Convert to paise (1900)
-            planName: PLAN.name 
+            amount: plan.price * 100, // paise
+            planName: plan.id 
         })
       })
       const data = await res.json()
 
-      if (!data.orderId) throw new Error('Order creation failed')
+      if (!data.orderId) throw new Error('Order failed')
 
-      // 3. Open Razorpay
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: PLAN.price * 100,
+        amount: plan.price * 100,
         currency: "INR",
-        name: "ResumeAI",
-        description: PLAN.name,
+        name: "MyCV.guru",
+        description: plan.name,
         order_id: data.orderId,
         handler: async function (response: any) {
           const verifyRes = await fetch('/api/payment/verify', {
@@ -65,15 +108,16 @@ export default function PricingPage() {
               orderCreationId: data.orderId,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              planType: plan.id 
             }),
           });
           
           if ((await verifyRes.json()).success) {
-            alert("Payment Successful! You have 2 downloads.");
+            alert(plan.id === 'premium' ? "Welcome to Premium!" : "Download Credit Added!");
             router.push('/dashboard'); 
           }
         },
-        theme: { color: '#0f172a' },
+        theme: { color: plan.id === 'premium' ? '#4f46e5' : '#2563eb' },
       };
 
       const rzp = new (window as any).Razorpay(options);
@@ -81,69 +125,78 @@ export default function PricingPage() {
       
     } catch (error) {
       alert("Payment failed. Please try again.");
-      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(null)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-white font-sans pb-20">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       
-      {/* Header */}
       <div className="bg-white border-b p-4 sticky top-0 z-10">
-         <div className="max-w-3xl mx-auto flex items-center gap-4">
+         <div className="max-w-6xl mx-auto flex items-center gap-4">
             <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-full text-slate-600"><ArrowLeft size={20}/></button>
             <span className="font-bold text-lg text-slate-800">Upgrade Plan</span>
          </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-           <h1 className="text-3xl font-bold text-slate-900 mb-3">Simple Pricing, Professional Results</h1>
-           <p className="text-slate-500">Pay once, download your resume, and get hired.</p>
+      <div className="max-w-6xl mx-auto px-4 py-16">
+        <div className="text-center mb-16">
+           <h1 className="text-4xl font-extrabold text-slate-900 mb-4">Upgrade your career</h1>
+           <p className="text-slate-500 text-lg">Select the plan that fits your job search needs.</p>
         </div>
 
-        {/* Single Card Layout */}
-        <div className={`relative p-8 rounded-2xl shadow-xl flex flex-col md:flex-row gap-8 items-center ${PLAN.color}`}>
-           
-           <div className="flex-1 text-left">
-              <div className="flex items-center gap-2 mb-4 text-slate-300 font-medium uppercase tracking-wider text-xs">
-                <FileText size={16}/> Professional Plan
-              </div>
-              <div className="mb-6">
-                 <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-black">₹{PLAN.price}</span>
-                    <span className="text-slate-400 font-medium">/ one-time</span>
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+           {PLANS.map((plan) => (
+              <div key={plan.id} className={`relative p-8 rounded-3xl border-2 flex flex-col transition-all hover:-translate-y-1 ${plan.color} ${plan.popular ? 'shadow-2xl ring-4 ring-indigo-50 border-indigo-500' : 'shadow-lg'}`}>
+                 {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
+                       Recommended
+                    </div>
+                 )}
+                 
+                 <div className="mb-8 text-center">
+                    <div className={`inline-flex items-center justify-center p-3 rounded-full shadow-sm mb-4 ${plan.id === 'premium' ? 'bg-indigo-800 text-indigo-200' : 'bg-white text-slate-700'}`}>
+                        <plan.icon size={24} />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                    <div className="flex items-center justify-center gap-1 mb-2">
+                       <span className="text-5xl font-black">₹{plan.price}</span>
+                    </div>
+                    <span className={`text-sm font-medium ${plan.id === 'premium' ? 'text-indigo-200' : 'text-slate-500'}`}>{plan.period}</span>
                  </div>
+
+                 <ul className="space-y-4 mb-8 flex-1 px-2">
+                    {plan.features.map((feature, i) => (
+                       <li key={i} className={`flex items-start gap-3 text-sm font-medium ${plan.id === 'premium' ? 'text-indigo-100' : 'text-slate-600'}`}>
+                          <Check size={18} className={`shrink-0 mt-0.5 ${plan.id === 'premium' ? 'text-indigo-400' : 'text-green-600'}`}/>
+                          {feature}
+                       </li>
+                    ))}
+                 </ul>
+
+                 <button 
+                    onClick={() => handleSelectPlan(plan)}
+                    disabled={!!loading}
+                    className={`w-full py-4 rounded-xl font-bold text-base shadow-md transition-all flex items-center justify-center gap-2 ${plan.btnColor} disabled:opacity-70`}
+                 >
+                    {loading === plan.id ? <Loader2 className="animate-spin"/> : (plan.price === 0 ? "Current Plan" : "Select Plan")}
+                 </button>
               </div>
-              <button 
-                onClick={handlePayment}
-                disabled={loading}
-                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${PLAN.btnColor} disabled:opacity-80`}
-              >
-                {loading ? <Loader2 className="animate-spin"/> : "Unlock Downloads"}
-              </button>
-           </div>
-
-           <div className="w-full h-px bg-slate-700 md:w-px md:h-48"></div>
-
-           <div className="flex-1">
-              <ul className="space-y-5">
-                 {PLAN.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-base text-slate-100 font-medium">
-                       <div className="bg-green-500/20 p-1 rounded-full text-green-400"><Check size={16}/></div>
-                       {feature}
-                    </li>
-                 ))}
-              </ul>
-           </div>
+           ))}
         </div>
         
-        <div className="mt-8 flex justify-center gap-6 text-xs text-slate-400">
-           <span className="flex items-center gap-1"><Download size={12}/> Instant PDF</span>
-           <span className="flex items-center gap-1"><Check size={12}/> Secure Payment</span>
+        <div className="mt-20 border-t pt-10 text-center">
+            <h4 className="text-slate-900 font-bold mb-2 flex items-center justify-center gap-2">
+                <HelpCircle size={18}/> Need help?
+            </h4>
+            <p className="text-slate-500 text-sm mb-4">
+                Our support team is available to assist you.
+            </p>
+            <a href="mailto:support@mycv.guru" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline">
+                <Mail size={16}/> support@mycv.guru
+            </a>
         </div>
       </div>
     </div>

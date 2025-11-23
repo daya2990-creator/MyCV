@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, Mail, Lock, User, ArrowRight, Sparkles, Check } from 'lucide-react'
+import { Loader2, Mail, Lock, User, ArrowRight, Sparkles, Check, MailCheck } from 'lucide-react'
+import { AppLogo } from '../../components/AppLogo'
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
@@ -12,6 +13,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false) 
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -25,6 +27,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName },
+        emailRedirectTo: `${location.origin}/auth/callback`,
       },
     })
 
@@ -35,8 +38,7 @@ export default function SignupPage() {
       if (data.session) {
          router.push('/dashboard')
       } else {
-         alert('Please check your email to confirm your account!')
-         router.push('/login')
+         setSuccess(true)
       }
       setLoading(false)
     }
@@ -49,6 +51,34 @@ export default function SignupPage() {
     })
   }
 
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+           <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MailCheck size={32}/>
+           </div>
+           <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
+           <p className="text-gray-600 mb-6">
+              We've sent a verification link to <span className="font-medium text-gray-900">{email}</span>.
+           </p>
+           <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 mb-6 text-sm text-slate-500">
+              Click the button in the email to verify your account and start building your resume.
+           </div>
+           <button 
+              onClick={() => router.push('/login')}
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors"
+           >
+              Back to Login
+           </button>
+           <p className="mt-4 text-xs text-gray-400">
+              Didn't receive it? Check your spam folder.
+           </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex bg-white">
       
@@ -58,10 +88,7 @@ export default function SignupPage() {
          <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
          
          <div className="relative z-10">
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
-               <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">R</div>
-               ResumeAI
-            </div>
+            <AppLogo textClassName="text-white" />
          </div>
 
          <div className="relative z-10 mb-20">
@@ -69,7 +96,7 @@ export default function SignupPage() {
             <div className="space-y-4">
                <div className="flex items-center gap-3 text-indigo-100 bg-indigo-500/30 p-3 rounded-xl backdrop-blur-sm w-fit">
                   <div className="bg-white text-indigo-600 p-1 rounded-full"><Sparkles size={14}/></div>
-                  <span className="font-medium">Pro Resume Builder</span>
+                  <span className="font-medium">Easy-to-Use Resume Editor</span>
                </div>
                <div className="flex items-center gap-3 text-indigo-100 bg-indigo-500/30 p-3 rounded-xl backdrop-blur-sm w-fit">
                   <div className="bg-white text-indigo-600 p-1 rounded-full"><Check size={14}/></div>
@@ -79,7 +106,7 @@ export default function SignupPage() {
          </div>
 
          <div className="relative z-10 text-sm text-indigo-200">
-            © 2024 ResumeAI Inc. All rights reserved.
+            © 2024 MyCV.guru. All rights reserved.
          </div>
       </div>
 

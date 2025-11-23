@@ -5,11 +5,11 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') || '/dashboard' // Logic to handle redirects
 
   if (code) {
     const cookieStore = await cookies()
     
-    // FIX: Wrap cookieStore in Promise.resolve() to satisfy Next.js 15 + Supabase types
     const supabase = createRouteHandlerClient({ 
         cookies: () => Promise.resolve(cookieStore) 
     })
@@ -17,6 +17,5 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin + '/dashboard')
+  return NextResponse.redirect(requestUrl.origin + next)
 }

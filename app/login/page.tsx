@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, Mail, Lock, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { AppLogo } from '../../components/AppLogo'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -45,21 +46,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex bg-white">
       
-      {/* LEFT SIDE: BRANDING (Hidden on Mobile) */}
+      {/* LEFT SIDE: BRANDING */}
       <div className="hidden lg:flex w-1/2 bg-slate-900 relative flex-col justify-between p-12 text-white overflow-hidden">
          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover opacity-20"></div>
          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/0 to-slate-900/90"></div>
          
          <div className="relative z-10">
-            <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
-               <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">R</div>
-               ResumeAI
-            </div>
+            <AppLogo textClassName="text-white" />
          </div>
 
          <div className="relative z-10 space-y-6">
             <h1 className="text-4xl font-bold leading-tight">"I got the job!"</h1>
-            <p className="text-lg text-slate-300">Join thousands of professionals who have accelerated their careers with our resume builder.</p>
+            <p className="text-lg text-slate-300">Join thousands of professionals who have accelerated their careers with MyCV.guru.</p>
             
             <div className="space-y-3">
                <div className="flex items-center gap-3 text-sm text-slate-300">
@@ -121,7 +119,8 @@ export default function LoginPage() {
                 <div>
                    <div className="flex justify-between mb-1">
                       <label className="block text-sm font-medium text-gray-700">Password</label>
-                      <a href="#" className="text-sm text-indigo-600 hover:text-indigo-500 font-medium">Forgot?</a>
+                      {/* FIXED: class -> className */}
+                      <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500 font-medium">Forgot?</Link>
                    </div>
                    <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><Lock size={18}/></div>
