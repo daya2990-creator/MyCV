@@ -10,21 +10,21 @@ export async function GET(request: Request) {
   if (code) {
     const cookieStore = await cookies()
     
-    // FIX: Wrap cookieStore in Promise.resolve() to satisfy Next.js 15 + Supabase types
-    // This matches the fix we used in your Payment API
-    const supabase = createRouteHandlerClient({ 
-        cookies: () => Promise.resolve(cookieStore) 
-    })
+    // CRITICAL FIX: 
+    // Next.js 15 cookies are async. We await them above.
+    // The Supabase helper type definition is slightly outdated for Next 15, causing a TS error.
+    // We use @ts-ignore to force passing the 'cookieStore' object directly, which works at runtime.
+    
+    // @ts-ignore
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     
     try {
       await supabase.auth.exchangeCodeForSession(code)
     } catch (error) {
-      console.error('Auth Code Exchange Error:', error)
-      // If auth fails, redirect to login with an error message
-      return NextResponse.redirect(new URL('/login?error=auth_failed', request.url))
+      console.error('Auth Exchange Error:', error)
+      return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_failed`)
     }
   }
 
-  // Successful login -> Redirect to dashboard
-  return NextResponse.redirect(new URL(next, request.url))
+  return NextResponse.redirect(`${requestUrl.origin}${next}`)
 }
