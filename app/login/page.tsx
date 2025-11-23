@@ -46,7 +46,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex bg-white">
       
-      {/* LEFT SIDE: BRANDING */}
+      {/* LEFT SIDE: BRANDING (Hidden on Mobile) */}
       <div className="hidden lg:flex w-1/2 bg-slate-900 relative flex-col justify-between p-12 text-white overflow-hidden">
          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover opacity-20"></div>
          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/0 to-slate-900/90"></div>
@@ -119,7 +119,6 @@ export default function LoginPage() {
                 <div>
                    <div className="flex justify-between mb-1">
                       <label className="block text-sm font-medium text-gray-700">Password</label>
-                      {/* FIXED: class -> className */}
                       <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500 font-medium">Forgot?</Link>
                    </div>
                    <div className="relative">

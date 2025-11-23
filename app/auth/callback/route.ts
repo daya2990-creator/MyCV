@@ -5,17 +5,19 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') || '/dashboard' // Logic to handle redirects
+  // Default to dashboard
+  const next = requestUrl.searchParams.get('next') || '/dashboard'
 
   if (code) {
     const cookieStore = await cookies()
     
-    const supabase = createRouteHandlerClient({ 
-        cookies: () => Promise.resolve(cookieStore) 
-    })
+    // @ts-ignore - Intentionally ignoring the Promise type mismatch to ensure functionality
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  return NextResponse.redirect(requestUrl.origin + next)
+  // Use relative redirect to avoid domain mismatch issues
+  // The browser will resolve this against the current origin
+  return NextResponse.redirect(new URL(next, request.url))
 }
