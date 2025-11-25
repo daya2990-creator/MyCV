@@ -1,32 +1,39 @@
 import { NextResponse } from 'next/server';
+// We import OpenAI but do NOT initialize it at the top level
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: Request) {
+  // 1. Check if Key Exists at Runtime (Protects the Build)
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn("OpenAI API Key is missing. AI features are disabled.");
+    return NextResponse.json(
+      { error: 'AI Service Not Configured' }, 
+      { status: 503 }
+    );
+  }
+
   try {
-    const { jobTitle, type } = await request.json();
-
-    let prompt = "";
-    
-    if (type === 'summary') {
-      prompt = `Write a professional, concise resume summary for a ${jobTitle}. Focus on achievements and professional tone. Maximum 3 sentences.`;
-    } else if (type === 'skills') {
-      prompt = `List 10 key technical and soft skills for a ${jobTitle}, separated by commas.`;
-    }
-
-    const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "gpt-3.5-turbo", // or "gpt-4o-mini" for cheaper/faster results
+    // 2. Initialize ONLY when called
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const text = completion.choices[0].message.content;
-    return NextResponse.json({ text });
+    const { prompt } = await request.json();
 
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'AI Failed' }, { status: 500 });
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    return NextResponse.json({ result: response.choices[0].message.content });
+
+  } catch (error: any) {
+    console.error('AI Generation Error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to generate content' }, 
+      { status: 500 }
+    );
   }
 }
