@@ -12,12 +12,12 @@ const PLANS = [
     name: 'Free Tier',
     price: 0,
     period: 'forever',
-    label: 'Basic',
+    label: 'Starter',
     features: [
-      'Create unlimited resumes',
+      '1 Free PDF Download', // <--- UPDATED THIS to match logic
+      'Create Unlimited Resumes',
       'Access Basic Templates',
-      'Watermark on Preview',
-      'No PDF Export'
+      'Watermark on Preview'
     ],
     color: 'bg-slate-50 border-slate-200 text-slate-800',
     btnColor: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
@@ -70,6 +70,8 @@ export default function PricingPage() {
 
   const handleSelectPlan = async (plan: typeof PLANS[0]) => {
     if (plan.price === 0) {
+       // Check if they already used their free credit?
+       // Usually we just send them to dashboard to use what they have.
        router.push('/dashboard');
        return;
     }

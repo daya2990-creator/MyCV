@@ -19,6 +19,7 @@ import {
   ResumeData, Section, SectionItem 
 } from '../../../components/ResumeTemplates'
 
+// --- CONFIGURATION ---
 const TEMPLATES: Record<string, any> = {
   't1':  { component: Template1, name: "Structure", category: 'modern', tier: 'free' },
   't2':  { component: Template2, name: "Clarity", category: 'modern', tier: 'free' },
@@ -70,6 +71,7 @@ const SAMPLE_RESUME: ResumeData = {
   ]
 };
 
+// --- RICH TEXT TOOLBAR COMPONENT ---
 const RichTextToolbar = ({ onAction }: { onAction: (tag: string) => void }) => (
   <div className="flex items-center gap-1 mb-2 bg-slate-100 p-1 rounded border border-slate-200 w-fit">
     <button onClick={() => onAction('b')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Bold"><Bold size={14}/></button>
@@ -86,7 +88,7 @@ const Input = ({ label, value, onChange }: any) => (
     <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>
     <input className="w-full p-3 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" value={value || ''} onChange={(e) => onChange(e.target.value)}/>
   </div>
-);
+)
 
 export default function EditorPage() {
   const params = useParams()
@@ -96,31 +98,39 @@ export default function EditorPage() {
   const componentRef = useRef<HTMLDivElement>(null)
   const activeInputRef = useRef<HTMLTextAreaElement | null>(null); 
 
+  // State
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const [activeTab, setActiveTab] = useState<'design' | 'structure'>('design')
   const [activeSectionId, setActiveSectionId] = useState('basics')
+  const [templateCategory, setTemplateCategory] = useState<'all' | 'modern' | 'professional' | 'creative'>('all')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
+  
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
   const [selectedTemplate, setSelectedTemplate] = useState('t1')
-  const [design, setDesign] = useState<{ color: string; font: string; fontSize: 'small' | 'medium' | 'large' }>({ color: '#3b82f6', font: "'Roboto', sans-serif", fontSize: 'medium' })
+  const [design, setDesign] = useState<{ color: string; font: string; fontSize: 'small' | 'medium' | 'large' }>({ 
+    color: '#3b82f6', 
+    font: "'Roboto', sans-serif",
+    fontSize: 'medium' 
+  })
   const [resume, setResume] = useState<ResumeData>(SAMPLE_RESUME)
-  
-  const [templateCategory, setTemplateCategory] = useState<'all' | 'modern' | 'professional' | 'creative'>('all');
 
+  // --- INIT ---
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return router.push('/login')
+      
       const { data: profile } = await supabase.from('profiles').select('subscription_status, credits').eq('id', user.id).single()
       if (profile) {
          setIsPremium(profile.subscription_status === 'pro')
          setCredits(profile.credits || 0)
       }
+
       const { data } = await supabase.from('resumes').select('content, template_id').eq('id', params.id).single()
       if (data) {
          if (data.content && data.content.sections) setResume(data.content);
@@ -131,25 +141,64 @@ export default function EditorPage() {
     init()
   }, [])
 
+  // --- SAVE ---
   const autoSave = useCallback((newData: ResumeData) => {
       setSaving(true)
       supabase.from('resumes').update({ content: newData, updated_at: new Date() }).eq('id', params.id).then(() => setTimeout(() => setSaving(false), 800))
   }, [params.id])
 
   const updateResume = (newData: ResumeData) => setResume(newData);
-  const manualSave = () => { autoSave(resume); setViewMode('preview'); }
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
+  const manualSave = () => {
+      autoSave(resume);
+      setViewMode('preview'); // Return to preview after saving
+  }
+
+  // --- IMAGE UPLOAD ---
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 500000) { 
+         alert("Image is too large. Please use an image under 500KB.");
+         return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } };
+        updateResume(newData);
+        autoSave(newData);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // --- RICH TEXT FORMATTER ---
   const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
-    const textarea = activeInputRef.current; if (!textarea) return;
-    const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
-    let insertText = tag === 'br' ? "<br/>" : tag === 'li' ? `<li>${text.slice(start, end)}</li>` : `<${tag}>${text.slice(start, end)}</${tag}>`;
+    const textarea = activeInputRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    
+    let insertText = "";
+    if (tag === 'br') { insertText = "<br/>"; } 
+    else if (tag === 'li') { insertText = `<li>${text.slice(start, end)}</li>`; } 
+    else { insertText = `<${tag}>${text.slice(start, end)}</${tag}>`; }
+    
     const newText = text.slice(0, start) + insertText + text.slice(end);
-    if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
-    else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
+
+    if (itemId) {
+       updateSectionItem(sectionId, itemId, 'description', newText);
+    } else {
+       const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s);
+       updateResume({ ...resume, sections: newSections });
+    }
+
     setTimeout(() => textarea.focus(), 0);
   };
 
+  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -177,18 +226,42 @@ export default function EditorPage() {
     documentTitle: resume.basics.fullName || 'Resume' 
   });
 
+  // --- DOWNLOAD & UPGRADE LOGIC ---
   const onDownloadClick = async () => {
+    // 1. Premium User: Allow everything
     if (isPremium) { handlePrint(); return; }
-    if (credits > 0) {
-        if (confirm(`Use 1 Credit to download? (${credits} remaining)`)) {
+
+    // 2. Free User (0 Credits, Not Premium)
+    if (credits === 0) {
+        alert("Free Tier Limit Reached.\nUpgrade to Standard (₹39/download) or Premium (₹99/mo) to remove watermark and export.");
+        router.push('/pricing');
+        return;
+    }
+
+    // 3. Check Template Tier
+    const template = TEMPLATES[selectedTemplate];
+    if (template.tier === 'premium') {
+        alert("This is a Premium Template.\nUpgrade to Premium (₹99) or switch to a Standard/Free template to use your credit.");
+        return;
+    }
+    
+    // 4. Deduct Credit & Print
+    if (confirm(`Use 1 Credit to download? (${credits} remaining)`)) {
+        try {
             const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
-            if ((await res.json()).success) {
+            const json = await res.json();
+            if (json.success) {
                 setCredits(c => c - 1);
-                handlePrint();
+                // IMPORTANT: Small delay to ensure state updates before print logic fires
+                setTimeout(() => {
+                    handlePrint();
+                }, 100);
+            } else {
+                alert("Error: " + (json.error || "Could not deduct credit."));
             }
+        } catch (err) {
+            alert("Network error. Please check connection.");
         }
-    } else {
-        if(confirm("You have 0 credits.\nPay ₹39 for this download?")) router.push('/pricing');
     }
   }
 
@@ -229,6 +302,8 @@ export default function EditorPage() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
+        
+        {/* LEFT NAV */}
         <nav className="w-64 bg-white border-r flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
            <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><span className="text-xs font-bold uppercase text-slate-400">Contents</span><button onClick={() => setShowAddModal(true)} className="text-xs bg-white border px-2 py-1 rounded hover:bg-indigo-50 text-indigo-600 flex items-center gap-1"><Plus size={12}/> Add</button></div>
            <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -243,6 +318,8 @@ export default function EditorPage() {
         </nav>
 
         <div className="flex-1 bg-slate-100 relative z-10 flex flex-col overflow-hidden">
+           
+           {/* EDIT MODE */}
            {viewMode === 'edit' && (
              <div className="flex-1 flex flex-col h-full bg-white animate-in slide-in-from-bottom-4 fade-in duration-300">
                 <div className="p-4 border-b flex items-center justify-between bg-white"><button onClick={() => setViewMode('preview')} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2"><ArrowLeft size={16}/> Back to Preview</button><span className="font-bold text-slate-800 text-sm uppercase tracking-wider">Editing: {activeSectionId === 'basics' ? 'Basics' : resume.sections.find(s => s.id === activeSectionId)?.title}</span><div className="w-20"></div></div>
@@ -282,14 +359,19 @@ export default function EditorPage() {
              </div>
            )}
 
-           {viewMode === 'preview' && (
-              <div className="absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6]">
-                 <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-                 <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10">
-                    <div ref={componentRef} className="text-slate-800"><div style={{ fontFamily: design.font }}><CurrentTemplate data={resume} theme={design} isPremium={isPremium} /></div></div>
+           {/* View Mode: PREVIEW - ALWAYS MOUNTED, JUST HIDDEN VIA Z-INDEX */}
+           {/* CRITICAL FIX: We use CSS visibility instead of conditional rendering so the PDF Ref exists! */}
+           <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
+              <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+              
+              <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10 print:transform-none print:scale-100 print:shadow-none print:m-0">
+                 <div ref={componentRef} className="text-slate-800">
+                    <div style={{ fontFamily: design.font }}>
+                       <CurrentTemplate data={resume} theme={design} isPremium={isPremium} />
+                    </div>
                  </div>
               </div>
-           )}
+           </div>
         </div>
 
         {/* COLUMN 3: RIGHT CONTROL CENTER */}
