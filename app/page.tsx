@@ -1,8 +1,35 @@
+'use client'
+
+import { useEffect } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2, FileText, Zap, Download, Mail, HelpCircle } from 'lucide-react'
-import { AppLogo } from '../components/AppLogo' 
+import { AppLogo } from '../components/AppLogo'
 
 export default function LandingPage() {
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+
+  // --- AUTH RECOVERY LISTENER ---
+  // This fixes the issue where "Reset Password" redirects to Home
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked "Reset Password" -> Send to Update Password Page
+        router.push('/update-password')
+      } else if (event === 'SIGNED_IN') {
+        // Normal Login -> Send to Dashboard (optional, keeps flow smooth)
+        // Check if URL has 'code' to avoid redirecting already logged-in users browsing home
+        if (window.location.search.includes('code=')) {
+             router.push('/dashboard')
+        }
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase, router])
+
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
       
@@ -144,10 +171,10 @@ export default function LandingPage() {
                <AppLogo size={24} textClassName="text-slate-700"/>
             </div>
             <p className="text-slate-500 text-sm mb-8">© 2024 MyCV.guru. Helping you land your dream job.</p>
-            <div className="flex justify-center gap-6 text-sm text-slate-500 font-medium">
-               <Link href="/terms" className="hover:text-indigo-600 transition-colors">Terms of Service</Link>
-               <Link href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
-               <Link href="/support" className="hover:text-indigo-600 transition-colors">Support</Link>
+            <div className="flex justify-center gap-6 text-sm text-slate-500">
+               <Link href="/terms" className="hover:text-slate-900">Terms of Service</Link>
+               <Link href="/privacy" className="hover:text-slate-900">Privacy Policy</Link>
+               <Link href="/support" className="hover:text-slate-900">Support</Link>
             </div>
          </div>
       </footer>

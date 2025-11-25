@@ -18,12 +18,12 @@ export default function ForgotPasswordPage() {
     setError(null)
 
     try {
-      // Construct the URL explicitly to avoid syntax errors
-      const origin = window.location.origin
-      const redirectUrl = origin + '/auth/callback?next=/update-password'
-
+      // Use explicit origin for robustness
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+        // This directs them to the callback route, which then forwards to /update-password
+        redirectTo: `${origin}/auth/callback?next=/update-password`,
       })
 
       if (error) throw error
