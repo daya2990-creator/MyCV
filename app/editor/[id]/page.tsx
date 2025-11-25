@@ -86,7 +86,7 @@ const Input = ({ label, value, onChange }: any) => (
     <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>
     <input className="w-full p-3 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" value={value || ''} onChange={(e) => onChange(e.target.value)}/>
   </div>
-)
+);
 
 export default function EditorPage() {
   const params = useParams()
@@ -108,14 +108,12 @@ export default function EditorPage() {
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
-  
   const [selectedTemplate, setSelectedTemplate] = useState('t1')
   const [design, setDesign] = useState<{ color: string; font: string; fontSize: 'small' | 'medium' | 'large' }>({ 
     color: '#3b82f6', 
     font: "'Roboto', sans-serif",
     fontSize: 'medium' 
   })
-  
   const [resume, setResume] = useState<ResumeData>(SAMPLE_RESUME)
 
   useEffect(() => {
@@ -191,24 +189,15 @@ export default function EditorPage() {
         if (confirm(`Use 1 Credit to download? (${credits} remaining)`)) {
             try {
                 const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
-                
-                if (!res.ok) {
-                    const err = await res.json();
-                    alert(`Error: ${err.error || 'Failed to process request'}`);
-                    return;
-                }
-
                 const json = await res.json();
                 if (json.success) {
                     setCredits(json.remaining);
-                    // Wait slightly for state update before printing
                     setTimeout(() => handlePrint(), 100);
                 } else {
-                    alert("Could not deduct credit.");
+                    alert("Error using credit: " + (json.error || "Unknown error"));
                 }
             } catch (e) {
-                console.error(e);
-                alert("Network error. Please check your connection.");
+                alert("Network error. Please check connection.");
             }
         }
     } else {
@@ -306,18 +295,13 @@ export default function EditorPage() {
                    </div>
                 </div>
              </div>
-           }
+           
 
            {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-              
               <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10 print:transform-none print:scale-100 print:shadow-none print:m-0">
-                 <div ref={componentRef} className="text-slate-800">
-                    <div style={{ fontFamily: design.font }}>
-                       <CurrentTemplate data={resume} theme={design} isPremium={isPremium} />
-                    </div>
-                 </div>
+                 <div ref={componentRef} className="text-slate-800"><div style={{ fontFamily: design.font }}><CurrentTemplate data={resume} theme={design} isPremium={isPremium} /></div></div>
               </div>
            </div>
         </div>
