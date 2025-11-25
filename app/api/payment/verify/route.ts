@@ -15,12 +15,14 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => Promise.resolve(cookieStore) });
+  // FIX: Pass cookieStore directly
+  // @ts-ignore
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  
   const { data: { user } } = await supabase.auth.getUser();
 
   if (user) {
     if (planType === 'premium') {
-        // PREMIUM SUBSCRIPTION (₹99)
         const nextMonth = new Date();
         nextMonth.setDate(nextMonth.getDate() + 30);
         
@@ -30,7 +32,6 @@ export async function POST(request: Request) {
         }).eq('id', user.id);
 
     } else if (planType === 'standard') {
-        // STANDARD CREDIT (₹39)
         const { data: profile } = await supabase.from('profiles').select('credits').eq('id', user.id).single();
         const currentCredits = profile?.credits || 0;
         

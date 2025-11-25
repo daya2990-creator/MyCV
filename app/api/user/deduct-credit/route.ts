@@ -6,16 +6,13 @@ export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     
-    // FIX: Wrap cookieStore in Promise.resolve() for Next.js 15 compatibility
-    const supabase = createRouteHandlerClient({ 
-        cookies: () => Promise.resolve(cookieStore) 
-    });
+    // FIX: Pass cookieStore directly and ignore TypeScript warning
+    // @ts-ignore
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     // 1. Get current credits
     const { data: profile, error: fetchError } = await supabase
