@@ -21,9 +21,12 @@ export default function ForgotPasswordPage() {
       // Use explicit origin for robustness
       const origin = typeof window !== 'undefined' ? window.location.origin : ''
       
+      // Encode the next parameter to ensure it survives the redirect chain
+      const nextPath = encodeURIComponent('/update-password')
+      const redirectUrl = `${origin}/auth/callback?next=${nextPath}`
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // This directs them to the callback route, which then forwards to /update-password
-        redirectTo: `${origin}/auth/callback?next=/update-password`,
+        redirectTo: redirectUrl,
       })
 
       if (error) throw error
@@ -46,6 +49,9 @@ export default function ForgotPasswordPage() {
           <p className="text-gray-600 mb-6">
              We've sent a password reset link to <span className="font-medium text-gray-900">{email}</span>.
           </p>
+          <div className="text-sm text-slate-500 mb-6 bg-slate-50 p-3 rounded-lg">
+            Clicking the link will log you in securely and take you to the password update page.
+          </div>
           <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-500">
              Back to Login
           </Link>
