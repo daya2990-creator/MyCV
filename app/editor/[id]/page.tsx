@@ -313,7 +313,7 @@ export default function EditorPage() {
                    </div>
                 </div>
              </div>
-           
+         
 
            {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
