@@ -12,12 +12,12 @@ const PLANS = [
     name: 'Free Tier',
     price: 0,
     period: 'forever',
-    label: 'Starter',
+    label: 'Basic',
     features: [
-      '1 Free PDF Download', // <--- UPDATED THIS to match logic
       'Create Unlimited Resumes',
-      'Access Basic Templates',
-      'Watermark on Preview'
+      'Access Basic Templates Only',
+      'Watermark on Preview',
+      'No PDF Export (View Only)'
     ],
     color: 'bg-slate-50 border-slate-200 text-slate-800',
     btnColor: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
@@ -31,7 +31,7 @@ const PLANS = [
     period: 'one-time',
     label: 'Pay Per Download',
     features: [
-      '1 High-Quality PDF Download',
+      '1 Clean PDF Download',
       'No Watermark',
       'Access Standard Templates',
       'ATS-Friendly Format',
@@ -45,16 +45,15 @@ const PLANS = [
   {
     id: 'premium',
     name: 'Premium',
-    price: 99,
+    price: 199,
     period: 'per month',
     label: 'Best Value',
     features: [
       'Unlimited Clean Downloads',
-      'Access All 20+ Templates',
+      'Access ALL 20+ Templates',
       'No Watermarks',
-      'Cover Letter Export',
-      'High-Quality PDF & DOCX',
-      'Priority Support'
+      'High-Quality PDF Export',
+      'Priority Email Support'
     ],
     color: 'bg-indigo-900 border-indigo-800 text-white',
     btnColor: 'bg-indigo-500 text-white hover:bg-indigo-600',
@@ -70,8 +69,6 @@ export default function PricingPage() {
 
   const handleSelectPlan = async (plan: typeof PLANS[0]) => {
     if (plan.price === 0) {
-       // Check if they already used their free credit?
-       // Usually we just send them to dashboard to use what they have.
        router.push('/dashboard');
        return;
     }

@@ -99,12 +99,12 @@ export default function EditorPage() {
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const [activeTab, setActiveTab] = useState<'design' | 'structure'>('design')
   const [activeSectionId, setActiveSectionId] = useState('basics')
-  const [templateCategory, setTemplateCategory] = useState<'all' | 'modern' | 'professional' | 'creative'>('all')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
+  const [isUnlocked, setIsUnlocked] = useState(false) // Tracks temporary unlock for print
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
@@ -115,6 +115,8 @@ export default function EditorPage() {
     fontSize: 'medium' 
   })
   const [resume, setResume] = useState<ResumeData>(SAMPLE_RESUME)
+  
+  const [templateCategory, setTemplateCategory] = useState<'all' | 'modern' | 'professional' | 'creative'>('all');
 
   useEffect(() => {
     const init = async () => {
@@ -179,37 +181,52 @@ export default function EditorPage() {
 
   const handlePrint = useReactToPrint({ 
     contentRef: componentRef, 
-    documentTitle: resume.basics.fullName || 'Resume' 
+    documentTitle: resume.basics.fullName || 'Resume',
+    onAfterPrint: () => setIsUnlocked(false) // Re-lock after printing
   });
 
+  // --- DOWNLOAD & UPGRADE LOGIC (Fixed for Free Download) ---
   const onDownloadClick = async () => {
+    // 1. Premium User: Allow everything
     if (isPremium) { handlePrint(); return; }
+
+    const template = TEMPLATES[selectedTemplate];
     
-    if (credits > 0) {
-        if (confirm(`Use 1 Credit to download? (${credits} remaining)`)) {
-            try {
-                const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
-                const json = await res.json();
-                if (json.success) {
-                    setCredits(json.remaining);
-                    setTimeout(() => handlePrint(), 100);
-                } else {
-                    alert("Error using credit: " + (json.error || "Unknown error"));
-                }
-            } catch (e) {
-                alert("Network error. Please check connection.");
-            }
-        }
-    } else {
-        if(confirm("You have 0 credits.\nPay ₹39 for this download?")) router.push('/pricing');
+    // 2. Premium Template Check
+    if (template.tier === 'premium') {
+        alert("This is a Premium Template.\nUpgrade to Premium (₹99/mo) to use this design.");
+        router.push('/pricing');
+        return;
     }
+
+    // 3. Standard Template / Free Template
+    // If user has credits, offer to use them for CLEAN download
+    if (credits > 0) {
+         if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark`)) {
+             // Use Credit
+             const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
+             const json = await res.json();
+             if (json.success) {
+                 setCredits(json.remaining);
+                 setIsUnlocked(true); // Remove watermark temporarily
+                 setTimeout(() => handlePrint(), 100);
+             } else {
+                 alert("Error using credit.");
+             }
+             return;
+         }
+    }
+    
+    // 4. Default: Download with Watermark (Free)
+    // If they canceled credit usage OR have 0 credits
+    handlePrint(); 
   }
 
   const onSelectTemplate = (id: string) => {
       const template = TEMPLATES[id];
       if (!isPremium && template.tier === 'premium') {
          alert("This is a Premium template. Upgrade to use.");
-         return;
+         // Allow selection but warn
       }
       setSelectedTemplate(id);
       autoSave(resume);
@@ -258,6 +275,7 @@ export default function EditorPage() {
         </nav>
 
         <div className="flex-1 bg-slate-100 relative z-10 flex flex-col overflow-hidden">
+           
            {/* EDIT MODE */}
            <div className={`flex-1 flex flex-col h-full bg-white animate-in slide-in-from-bottom-4 fade-in duration-300 ${viewMode === 'edit' ? 'block' : 'hidden'}`}>
                 <div className="p-4 border-b flex items-center justify-between bg-white"><button onClick={() => setViewMode('preview')} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2"><ArrowLeft size={16}/> Back to Preview</button><span className="font-bold text-slate-800 text-sm uppercase tracking-wider">Editing: {activeSectionId === 'basics' ? 'Basics' : resume.sections.find(s => s.id === activeSectionId)?.title}</span><div className="w-20"></div></div>
@@ -301,7 +319,11 @@ export default function EditorPage() {
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
               <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10 print:transform-none print:scale-100 print:shadow-none print:m-0">
-                 <div ref={componentRef} className="text-slate-800"><div style={{ fontFamily: design.font }}><CurrentTemplate data={resume} theme={design} isPremium={isPremium} /></div></div>
+                 <div ref={componentRef} className="text-slate-800">
+                    <div style={{ fontFamily: design.font }}>
+                       <CurrentTemplate data={resume} theme={design} isPremium={isPremium || isUnlocked} />
+                    </div>
+                 </div>
               </div>
            </div>
         </div>
