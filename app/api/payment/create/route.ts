@@ -13,7 +13,6 @@ export async function POST(request: Request) {
   const { amount, planName } = await request.json();
   
   // Validate: 3900 = ₹39 (Standard), 9900 = ₹99 (Premium)
-  // We ensure the backend only processes these specific amounts for security
   const validAmounts = [3900, 9900]; 
   
   if (!validAmounts.includes(amount)) {

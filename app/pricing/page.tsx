@@ -14,10 +14,10 @@ const PLANS = [
     period: 'forever',
     label: 'Basic',
     features: [
-      'Create Unlimited Resumes',
-      'Access Basic Templates Only',
-      'Watermark on Preview',
-      'No PDF Export (View Only)'
+      'Basic Templates Only',
+      'Watermark on PDF',
+      'Low-Quality Export',
+      'Create Unlimited Resumes'
     ],
     color: 'bg-slate-50 border-slate-200 text-slate-800',
     btnColor: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
@@ -33,8 +33,8 @@ const PLANS = [
     features: [
       '1 Clean PDF Download',
       'No Watermark',
-      'Access Standard Templates',
-      'ATS-Friendly Format',
+      'Access Basic & Standard Templates',
+      'ATS-Friendly Formatting',
       'Credits Never Expire'
     ],
     color: 'bg-blue-50 border-blue-200 text-blue-900',
@@ -45,15 +45,15 @@ const PLANS = [
   {
     id: 'premium',
     name: 'Premium',
-    price: 199,
+    price: 99,
     period: 'per month',
     label: 'Best Value',
     features: [
       'Unlimited Clean Downloads',
-      'Access ALL 20+ Templates',
+      'Access All Templates (Premium)',
       'No Watermarks',
-      'High-Quality PDF Export',
-      'Priority Email Support'
+      'High-Quality PDF & DOCX',
+      'Cover Letter Export'
     ],
     color: 'bg-indigo-900 border-indigo-800 text-white',
     btnColor: 'bg-indigo-500 text-white hover:bg-indigo-600',
