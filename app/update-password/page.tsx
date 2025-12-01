@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { Loader2, Lock, CheckCircle2 } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
 
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState('')
@@ -17,6 +17,7 @@ export default function UpdatePasswordPage() {
     setLoading(true)
     setError(null)
 
+    // 1. Update Password
     const { error } = await supabase.auth.updateUser({
       password: password
     })
@@ -25,8 +26,11 @@ export default function UpdatePasswordPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      alert('Password updated successfully!')
-      router.push('/dashboard')
+      // 2. Sign Out explicitly (Requirement: Ask user to login again)
+      await supabase.auth.signOut()
+      
+      // 3. Redirect to Login with message
+      router.push('/login?message=Password updated successfully. Please log in.')
     }
   }
 
@@ -34,7 +38,7 @@ export default function UpdatePasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Set New Password</h2>
-        <p className="text-gray-600 mb-8">Please enter your new password below.</p>
+        <p className="text-gray-600 mb-8">Enter your new password below to secure your account.</p>
 
         <form onSubmit={handleUpdate} className="space-y-6">
           {error && <div className="bg-red-50 text-red-600 p-3 text-sm rounded-lg">{error}</div>}
