@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, FileText, Zap, Download, Mail, HelpCircle } from 'lucide-react'
+import { ArrowRight, CheckCircle2, FileText, Zap, Download, Mail, HelpCircle, Crown, Ban } from 'lucide-react'
 import { AppLogo } from '../components/AppLogo'
 
 export default function LandingPage() {
@@ -18,13 +18,9 @@ export default function LandingPage() {
       if (event === 'PASSWORD_RECOVERY') {
         // User clicked "Reset Password" -> Send to Update Password Page
         router.push('/update-password')
-      } else if (event === 'SIGNED_IN') {
-        // Normal Login -> Send to Dashboard (optional, keeps flow smooth)
-        // Check if URL has 'code' to avoid redirecting already logged-in users browsing home
-        if (window.location.search.includes('code=')) {
-             router.push('/dashboard')
-        }
-      }
+      } 
+      // Note: We removed the SIGNED_IN redirect to Dashboard here to allow 
+      // the callback route's ?next= parameter to take precedence
     })
 
     return () => subscription.unsubscribe()
@@ -61,7 +57,7 @@ export default function LandingPage() {
             </h1>
             <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
               Create a professional, ATS-friendly resume in minutes. <br/>
-              First download is <strong>100% Free</strong>. No credit card required.
+              Choose from 20+ recruiter-approved templates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup" className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 hover:scale-105">
@@ -90,7 +86,7 @@ export default function LandingPage() {
             {[
                { icon: FileText, title: "Professional Templates", desc: "Choose from 20+ recruiter-approved layouts designed to pass ATS systems." },
                { icon: Zap, title: "Instant Customization", desc: "Change fonts, colors, and layouts with a single click. No design skills needed." },
-               { icon: Download, title: "Easy Export", desc: "Download high-quality PDFs instantly. Your first resume is on us." }
+               { icon: Download, title: "Easy Export", desc: "Download high-quality PDFs instantly." }
             ].map((f, i) => (
                <div key={i} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
                   <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
@@ -121,7 +117,7 @@ export default function LandingPage() {
               <ul className="space-y-3 mb-8 text-sm text-slate-600 font-medium">
                 <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Unlimited Resumes</li>
                 <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Basic Templates</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-slate-400"/> Watermark on Preview</li>
+                <li className="flex gap-3"><Ban size={18} className="text-slate-400"/> No PDF Export</li>
               </ul>
               <Link href="/signup" className="block text-center w-full py-3 rounded-xl bg-slate-100 text-slate-900 font-bold hover:bg-slate-200">Sign Up Free</Link>
             </div>
@@ -171,10 +167,10 @@ export default function LandingPage() {
                <AppLogo size={24} textClassName="text-slate-700"/>
             </div>
             <p className="text-slate-500 text-sm mb-8">© 2024 MyCV.guru. Helping you land your dream job.</p>
-            <div className="flex justify-center gap-6 text-sm text-slate-500">
-               <Link href="/terms" className="hover:text-slate-900">Terms of Service</Link>
-               <Link href="/privacy" className="hover:text-slate-900">Privacy Policy</Link>
-               <Link href="/support" className="hover:text-slate-900">Support</Link>
+            <div className="flex justify-center gap-6 text-sm text-slate-500 font-medium">
+               <Link href="/terms" className="hover:text-indigo-600 transition-colors">Terms of Service</Link>
+               <Link href="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
+               <Link href="/support" className="hover:text-indigo-600 transition-colors">Support</Link>
             </div>
          </div>
       </footer>
