@@ -26,7 +26,7 @@ const TEMPLATES: Record<string, any> = {
   't6':  { component: Template6, name: "Logic", category: 'professional', tier: 'free' },
   't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
 
-  // STANDARD (Professional)
+  // STANDARD (Professional - ₹39)
   't3':  { component: Template3, name: "Balance", category: 'professional', tier: 'standard' },
   't9':  { component: Template9, name: "Onyx", category: 'modern', tier: 'standard' },
   't10': { component: Template10, name: "Pike", category: 'modern', tier: 'standard' },
@@ -35,7 +35,7 @@ const TEMPLATES: Record<string, any> = {
   't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
   't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
 
-  // PREMIUM (Creative/Complex)
+  // PREMIUM (Creative/Complex - ₹199)
   't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
   't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
   't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
@@ -109,7 +109,7 @@ export default function EditorPage() {
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
-  const [isUnlocked, setIsUnlocked] = useState(false) // Tracks temporary unlock for print
+  const [isUnlocked, setIsUnlocked] = useState(false) 
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
@@ -170,7 +170,6 @@ export default function EditorPage() {
   
   const moveSection = (index: number, direction: 'up' | 'down') => { const newSections = [...resume.sections]; if (direction === 'up' && index > 0) [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]]; else if (direction === 'down' && index < newSections.length - 1) [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]]; const newData = { ...resume, sections: newSections }; updateResume(newData); autoSave(newData); }
   const deleteSection = (id: string) => { if(!confirm('Delete section?')) return; const newData = { ...resume, sections: resume.sections.filter(s => s.id !== id) }; updateResume(newData); autoSave(newData); setActiveSectionId('basics'); }
-  
   const addPageBreak = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const breakSection: Section = { id, title: 'Page Break', type: 'break', isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -191,14 +190,14 @@ export default function EditorPage() {
 
   // --- DOWNLOAD LOGIC (3-TIER) ---
   const onDownloadClick = async () => {
-    // 1. Premium User: Unlimited Clean
+    // 1. Premium User: Allow everything
     if (isPremium) { handlePrint(); return; }
 
     const template = TEMPLATES[selectedTemplate];
 
     // 2. Premium Template Lock
     if (template.tier === 'premium') {
-        alert("This is a Premium Template (₹99/mo).\nUpgrade to Premium or switch to Standard/Free.");
+        alert("This is a Premium Template (₹199/mo).\nUpgrade to Premium or switch to Standard/Free.");
         router.push('/pricing');
         return;
     }
@@ -225,7 +224,7 @@ export default function EditorPage() {
         return;
     }
 
-    // 4. Free Template (Basic)
+    // 4. Free Template
     // Option A: Use Credit for Clean
     if (credits > 0) {
          if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark (Free)`)) {
@@ -233,7 +232,7 @@ export default function EditorPage() {
              const json = await res.json();
              if (json.success) {
                  setCredits(json.remaining);
-                 setIsUnlocked(true);
+                 setIsUnlocked(true); // Remove watermark
                  setTimeout(() => handlePrint(), 100);
                  return;
              }
@@ -241,6 +240,7 @@ export default function EditorPage() {
     }
     
     // Option B: Download with Watermark
+    // isUnlocked remains false, so Watermark component shows
     handlePrint(); 
   }
 
@@ -280,6 +280,8 @@ export default function EditorPage() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
+        
+        {/* LEFT NAV */}
         <nav className="w-64 bg-white border-r flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
            <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><span className="text-xs font-bold uppercase text-slate-400">Contents</span><button onClick={() => setShowAddModal(true)} className="text-xs bg-white border px-2 py-1 rounded hover:bg-indigo-50 text-indigo-600 flex items-center gap-1"><Plus size={12}/> Add</button></div>
            <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -294,6 +296,7 @@ export default function EditorPage() {
         </nav>
 
         <div className="flex-1 bg-slate-100 relative z-10 flex flex-col overflow-hidden">
+           {/* EDIT MODE */}
            <div className={`flex-1 flex flex-col h-full bg-white animate-in slide-in-from-bottom-4 fade-in duration-300 ${viewMode === 'edit' ? 'block' : 'hidden'}`}>
                 <div className="p-4 border-b flex items-center justify-between bg-white"><button onClick={() => setViewMode('preview')} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2"><ArrowLeft size={16}/> Back to Preview</button><span className="font-bold text-slate-800 text-sm uppercase tracking-wider">Editing: {activeSectionId === 'basics' ? 'Basics' : resume.sections.find(s => s.id === activeSectionId)?.title}</span><div className="w-20"></div></div>
                 <div className="flex-1 overflow-y-auto p-8">
@@ -330,16 +333,22 @@ export default function EditorPage() {
                    </div>
                 </div>
              </div>
+           
 
            {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
               <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10 print:transform-none print:scale-100 print:shadow-none print:m-0">
-                 <div ref={componentRef} className="text-slate-800"><div style={{ fontFamily: design.font }}><CurrentTemplate data={resume} theme={design} isPremium={isPremium || isUnlocked} /></div></div>
+                 <div ref={componentRef} className="text-slate-800">
+                    <div style={{ fontFamily: design.font }}>
+                       <CurrentTemplate data={resume} theme={design} isPremium={isPremium || isUnlocked} />
+                    </div>
+                 </div>
               </div>
            </div>
         </div>
 
+        {/* COLUMN 3: RIGHT CONTROL CENTER */}
         <div className="w-[350px] bg-white border-l flex flex-col z-20 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
            <div className="flex border-b bg-slate-50"><button onClick={() => setActiveTab('design')} className={`flex-1 py-3 text-xs font-bold uppercase flex items-center justify-center gap-2 transition-colors ${activeTab === 'design' ? 'bg-white border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}><Palette size={14}/> Design</button><button onClick={() => setActiveTab('structure')} className={`flex-1 py-3 text-xs font-bold uppercase flex items-center justify-center gap-2 transition-colors ${activeTab === 'structure' ? 'bg-white border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}><Layers size={14}/> Structure</button></div>
            <div className="flex-1 overflow-hidden bg-slate-50/30 relative">

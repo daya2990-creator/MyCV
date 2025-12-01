@@ -12,8 +12,9 @@ export async function POST(request: Request) {
 
   const { amount, planName } = await request.json();
   
-  // Validate: 3900 = ₹39 (Standard), 9900 = ₹99 (Premium)
-  const validAmounts = [3900, 9900]; 
+  // Validate: 3900 = ₹39 (Standard), 19900 = ₹199 (Premium)
+  // FIX: Updated 9900 to 19900
+  const validAmounts = [3900, 19900]; 
   
   if (!validAmounts.includes(amount)) {
      return NextResponse.json({ error: 'Invalid Plan Amount' }, { status: 400 });

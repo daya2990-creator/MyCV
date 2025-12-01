@@ -45,51 +45,15 @@ type TemplateProps = {
   isPremium?: boolean;
 };
 
-// --- STRICT CORPORATE FONT SCALING ---
+// --- FONT SCALING ---
 const getThemeStyles = (size: 'small' | 'medium' | 'large' = 'medium') => {
   switch (size) {
-    case 'small': // 12px Base
-      return {
-        name: 'text-3xl',
-        job: 'text-sm',
-        contact: 'text-xs',
-        sectionTitle: 'text-sm',
-        itemTitle: 'text-sm font-bold',
-        itemSubtitle: 'text-xs',
-        body: 'text-xs',
-        date: 'text-xs',
-        tag: 'text-xs',
-        spacing: 'space-y-3',
-        mb: 'mb-3'
-      };
-    case 'large': // 16px Base
-      return {
-        name: 'text-5xl',
-        job: 'text-xl',
-        contact: 'text-base',
-        sectionTitle: 'text-xl',
-        itemTitle: 'text-xl font-bold',
-        itemSubtitle: 'text-lg',
-        body: 'text-base',
-        date: 'text-sm',
-        tag: 'text-sm',
-        spacing: 'space-y-5',
-        mb: 'mb-5'
-      };
-    default: // Medium (14px Base - Standard)
-      return {
-        name: 'text-4xl',
-        job: 'text-lg',
-        contact: 'text-sm', 
-        sectionTitle: 'text-base', 
-        itemTitle: 'text-base font-bold', 
-        itemSubtitle: 'text-sm', 
-        body: 'text-sm', 
-        date: 'text-sm',
-        tag: 'text-sm',
-        spacing: 'space-y-4',
-        mb: 'mb-4'
-      };
+    case 'small': 
+      return { name: 'text-3xl', job: 'text-sm', contact: 'text-xs', sectionTitle: 'text-sm', itemTitle: 'text-sm', itemSubtitle: 'text-xs', body: 'text-xs', date: 'text-xs', tag: 'text-xs', spacing: 'space-y-3', mb: 'mb-3' };
+    case 'large': 
+      return { name: 'text-5xl', job: 'text-xl', contact: 'text-base', sectionTitle: 'text-xl', itemTitle: 'text-xl', itemSubtitle: 'text-lg', body: 'text-base', date: 'text-sm', tag: 'text-sm', spacing: 'space-y-5', mb: 'mb-5' };
+    default: 
+      return { name: 'text-4xl', job: 'text-lg', contact: 'text-sm', sectionTitle: 'text-base', itemTitle: 'text-base', itemSubtitle: 'text-sm', body: 'text-sm', date: 'text-sm', tag: 'text-sm', spacing: 'space-y-4', mb: 'mb-4' };
   }
 };
 
@@ -113,6 +77,7 @@ const getPageColumns = (pageSections: Section[]) => {
   };
 };
 
+// --- COMPONENTS ---
 const Page = ({ children, font, className = "", style = {} }: { children: React.ReactNode, font: string, className?: string, style?: React.CSSProperties }) => (
   <div className={`page-sheet w-[210mm] min-h-[297mm] bg-white shadow-2xl mb-8 overflow-hidden relative print:shadow-none print:mb-0 print:break-after-page ${className}`} style={{ fontFamily: font, ...style }}>{children}</div>
 );
@@ -133,21 +98,31 @@ const SectionRenderer = ({ section, theme, className = "", textColor, subTextCol
   const tBg = tagBg || "bg-slate-100";
   const tTxt = tagText || "text-slate-700";
   const tBorder = tagBorder || "border-slate-200";
-  const subTxtColor = subTextColor || "";
 
   return (
     <div className={`mb-6 ${className}`} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
       <h3 className={`uppercase tracking-widest font-bold border-b-2 pb-1 mb-3 ${styles.sectionTitle}`} style={headerStyle}>{section.title}</h3>
       {section.type === 'text' && <RichText content={section.content} className={`leading-relaxed text-slate-700 ${styles.body} ${txtColor}`} />}
       {section.type === 'skills' && <div className="flex flex-wrap gap-2">{section.items.flatMap((i:any) => i.tags || []).map((tag:string, idx:number) => <span key={idx} className={`px-3 py-1.5 rounded-md font-medium border ${tBg} ${tTxt} ${tBorder} print:border-slate-300 ${styles.tag}`}>{tag}</span>)}</div>}
-      {section.type === 'list' && <div className={styles.spacing}>{section.items.map((item:any) => <div key={item.id} style={{ breakInside: 'avoid' }}><div className="flex justify-between items-baseline"><h4 className={`font-bold ${txtColor} ${styles.itemTitle}`}>{item.title}</h4><span className={`font-mono px-2 py-0.5 rounded whitespace-nowrap ${dtColor} ${styles.date}`}>{item.date}</span></div>{item.subtitle && <div className={`font-bold mb-1 opacity-90 ${subTxtColor} ${styles.itemSubtitle}`} style={{ color: subTextColor ? undefined : theme.color }}>{item.subtitle}</div>}<RichText content={item.description} className={`leading-relaxed mt-1 ${txtColor} ${styles.body}`} /></div>)}</div>}
+      {section.type === 'list' && <div className={styles.spacing}>{section.items.map((item:any) => <div key={item.id} style={{ breakInside: 'avoid' }}><div className="flex justify-between items-baseline"><h4 className={`font-bold ${txtColor} ${styles.itemTitle}`}>{item.title}</h4><span className={`font-mono px-2 py-0.5 rounded whitespace-nowrap ${dtColor} ${styles.date}`}>{item.date}</span></div>{item.subtitle && <div className={`font-bold mb-1 opacity-90 ${subTextColor || ''} ${styles.itemSubtitle}`} style={{ color: subTextColor ? undefined : theme.color }}>{item.subtitle}</div>}<RichText content={item.description} className={`leading-relaxed mt-1 ${txtColor} ${styles.body}`} /></div>)}</div>}
     </div>
   );
 };
 
+// --- FULL PAGE WATERMARK ---
 const Watermark = () => (
-  <div className="absolute bottom-0 left-0 w-full p-2 bg-slate-100 border-t text-center opacity-50 pointer-events-none print:opacity-100">
-     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Created with MyCV.guru</p>
+  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center pointer-events-none overflow-hidden select-none print:block">
+     {/* Large central watermark */}
+     <div className="transform -rotate-45 opacity-[0.08] text-slate-900 text-6xl font-black uppercase whitespace-nowrap border-8 border-slate-900 p-8 rounded-3xl tracking-widest">
+        MyCV.guru
+     </div>
+     
+     {/* Repeating background pattern for full coverage */}
+     <div className="absolute inset-0 opacity-[0.03] flex flex-wrap content-center justify-center gap-32 transform -rotate-12 scale-150 pointer-events-none">
+        {Array.from({ length: 20 }).map((_, i) => (
+           <div key={i} className="text-4xl font-bold text-black uppercase">MyCV.guru</div>
+        ))}
+     </div>
   </div>
 );
 
@@ -167,7 +142,7 @@ const MultiPageWrapper = ({ data, theme, renderPage, pageStyle, className = "", 
   );
 };
 
-// --- TEMPLATES 1-20 ---
+// --- TEMPLATES (1-20) ---
 
 export const Template1 = ({ data, theme, isPremium }: TemplateProps) => (
   <MultiPageWrapper 

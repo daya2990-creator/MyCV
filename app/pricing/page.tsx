@@ -14,10 +14,10 @@ const PLANS = [
     period: 'forever',
     label: 'Basic',
     features: [
-      'Basic Templates Only',
-      'Watermark on PDF',
-      'Low-Quality Export',
-      'Create Unlimited Resumes'
+      'Unlimited Watermarked Downloads', // UPDATED
+      'Access Basic Templates Only',
+      'Create Unlimited Resumes',
+      'Watermark on Download'
     ],
     color: 'bg-slate-50 border-slate-200 text-slate-800',
     btnColor: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
@@ -34,7 +34,7 @@ const PLANS = [
       '1 Clean PDF Download',
       'No Watermark',
       'Access Basic & Standard Templates',
-      'ATS-Friendly Formatting',
+      'ATS-Friendly Format',
       'Credits Never Expire'
     ],
     color: 'bg-blue-50 border-blue-200 text-blue-900',
@@ -44,16 +44,16 @@ const PLANS = [
   },
   {
     id: 'premium',
-    name: 'Premium',
-    price: 99,
+    name: 'Pro Membership',
+    price: 199,
     period: 'per month',
     label: 'Best Value',
     features: [
       'Unlimited Clean Downloads',
-      'Access All Templates (Premium)',
+      'Access ALL Templates (Basic + Std + Premium)',
       'No Watermarks',
-      'High-Quality PDF & DOCX',
-      'Cover Letter Export'
+      'Cover Letter Export',
+      'Priority Support'
     ],
     color: 'bg-indigo-900 border-indigo-800 text-white',
     btnColor: 'bg-indigo-500 text-white hover:bg-indigo-600',
@@ -112,7 +112,7 @@ export default function PricingPage() {
           });
           
           if ((await verifyRes.json()).success) {
-            alert(plan.id === 'premium' ? "Welcome to Premium!" : "Download Credit Added!");
+            alert(plan.id === 'premium' ? "Welcome to Pro!" : "Download Credit Added!");
             router.push('/dashboard'); 
           }
         },
