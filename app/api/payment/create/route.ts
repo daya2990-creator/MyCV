@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => Promise.resolve(cookieStore) });
+  // @ts-ignore
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -13,7 +14,6 @@ export async function POST(request: Request) {
   const { amount, planName } = await request.json();
   
   // Validate: 3900 = ₹39 (Standard), 19900 = ₹199 (Premium)
-  // FIX: Updated 9900 to 19900
   const validAmounts = [3900, 19900]; 
   
   if (!validAmounts.includes(amount)) {

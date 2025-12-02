@@ -14,10 +14,11 @@ const PLANS = [
     period: 'forever',
     label: 'Basic',
     features: [
-      'Unlimited Watermarked Downloads', // UPDATED
-      'Access Basic Templates Only',
+      'Unlimited Watermarked Downloads',
       'Create Unlimited Resumes',
-      'Watermark on Download'
+      'Access Basic Templates Only',
+      'Watermark on Download',
+      'No High-Quality Export'
     ],
     color: 'bg-slate-50 border-slate-200 text-slate-800',
     btnColor: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
@@ -44,7 +45,7 @@ const PLANS = [
   },
   {
     id: 'premium',
-    name: 'Pro Membership',
+    name: 'Premium',
     price: 199,
     period: 'per month',
     label: 'Best Value',
@@ -112,7 +113,7 @@ export default function PricingPage() {
           });
           
           if ((await verifyRes.json()).success) {
-            alert(plan.id === 'premium' ? "Welcome to Pro!" : "Download Credit Added!");
+            alert(plan.id === 'premium' ? "Welcome to Premium!" : "Download Credit Added!");
             router.push('/dashboard'); 
           }
         },

@@ -20,30 +20,25 @@ import {
 } from '../../../components/ResumeTemplates'
 
 const TEMPLATES: Record<string, any> = {
-  // FREE (Basic)
   't1':  { component: Template1, name: "Structure", category: 'modern', tier: 'free' },
   't2':  { component: Template2, name: "Clarity", category: 'modern', tier: 'free' },
-  't6':  { component: Template6, name: "Logic", category: 'professional', tier: 'free' },
-  't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
-
-  // STANDARD (Professional - ₹39)
   't3':  { component: Template3, name: "Balance", category: 'professional', tier: 'standard' },
+  't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
+  't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
+  't6':  { component: Template6, name: "Logic", category: 'professional', tier: 'free' },
+  't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
+  't8':  { component: Template8, name: "Slate", category: 'modern', tier: 'premium' },
   't9':  { component: Template9, name: "Onyx", category: 'modern', tier: 'standard' },
   't10': { component: Template10, name: "Pike", category: 'modern', tier: 'standard' },
   't11': { component: Template11, name: "Kakuna", category: 'professional', tier: 'standard' },
-  't14': { component: Template14, name: "Classic", category: 'professional', tier: 'standard' },
-  't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
-  't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
-
-  // PREMIUM (Creative/Complex - ₹199)
-  't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
-  't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
-  't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
-  't8':  { component: Template8, name: "Slate", category: 'modern', tier: 'premium' },
+  't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
   't13': { component: Template13, name: "Studio", category: 'modern', tier: 'premium' },
+  't14': { component: Template14, name: "Classic", category: 'professional', tier: 'standard' },
   't15': { component: Template15, name: "Elevate", category: 'creative', tier: 'premium' },
   't16': { component: Template16, name: "Terminal", category: 'creative', tier: 'premium' },
+  't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
   't18': { component: Template18, name: "Impact", category: 'modern', tier: 'premium' },
+  't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
   't20': { component: Template20, name: "Frame", category: 'creative', tier: 'premium' },
 };
 
@@ -185,63 +180,46 @@ export default function EditorPage() {
   const handlePrint = useReactToPrint({ 
     contentRef: componentRef, 
     documentTitle: resume.basics.fullName || 'Resume',
-    onAfterPrint: () => setIsUnlocked(false)
+    onAfterPrint: () => setIsUnlocked(false) // Re-lock after printing
   });
 
-  // --- DOWNLOAD LOGIC (3-TIER) ---
+  // --- DOWNLOAD LOGIC ---
   const onDownloadClick = async () => {
-    // 1. Premium User: Allow everything
     if (isPremium) { handlePrint(); return; }
 
     const template = TEMPLATES[selectedTemplate];
 
-    // 2. Premium Template Lock
+    // 1. Premium Template (Always Locked)
     if (template.tier === 'premium') {
-        alert("This is a Premium Template (₹199/mo).\nUpgrade to Premium or switch to Standard/Free.");
+        alert("This is a Premium Template.\nUpgrade to Premium (₹199/mo) to use this design.");
         router.push('/pricing');
         return;
     }
 
-    // 3. Standard Template (Requires Credits)
-    if (template.tier === 'standard') {
-        if (credits > 0) {
-             if (confirm(`Use 1 Credit for clean download? (${credits} remaining)`)) {
-                 const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
-                 const json = await res.json();
-                 if (json.success) {
-                     setCredits(json.remaining);
-                     setIsUnlocked(true);
-                     setTimeout(() => handlePrint(), 100);
-                 } else {
-                     alert("Error: " + (json.error || "Failed."));
-                 }
-             }
-        } else {
-             if (confirm("Standard Templates require a credit.\nPay ₹39 for 1 Clean Download?")) {
-                 router.push('/pricing');
-             }
-        }
-        return;
-    }
-
-    // 4. Free Template
-    // Option A: Use Credit for Clean
+    // 2. Free/Standard Template (Use Credit for Clean, or Download with Watermark)
     if (credits > 0) {
-         if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark (Free)`)) {
+         if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark`)) {
              const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
              const json = await res.json();
              if (json.success) {
                  setCredits(json.remaining);
-                 setIsUnlocked(true); // Remove watermark
+                 setIsUnlocked(true); // Clean Download
                  setTimeout(() => handlePrint(), 100);
                  return;
              }
          }
+    } else {
+         if (confirm("Download watermarked version?\n\nClick OK to Download (Free).\nClick Cancel to Upgrade for Clean PDF (₹39).")) {
+             handlePrint(); // Watermarked Download
+             return;
+         } else {
+             router.push('/pricing');
+             return;
+         }
     }
     
-    // Option B: Download with Watermark
-    // isUnlocked remains false, so Watermark component shows
-    handlePrint(); 
+    // Fallback if they canceled credit usage
+    handlePrint();
   }
 
   const onSelectTemplate = (id: string) => {
