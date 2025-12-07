@@ -104,7 +104,7 @@ export default function EditorPage() {
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
-  const [isUnlocked, setIsUnlocked] = useState(false) 
+  const [isUnlocked, setIsUnlocked] = useState(false) // Tracks temporary unlock for print
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
@@ -146,16 +146,62 @@ export default function EditorPage() {
   const manualSave = () => { autoSave(resume); setViewMode('preview'); }
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
+  // --- UPDATED RICH TEXT LOGIC (WORD-STYLE) ---
   const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
-    const textarea = activeInputRef.current; if (!textarea) return;
-    const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
-    let insertText = tag === 'br' ? "<br/>" : tag === 'li' ? `<li>${text.slice(start, end)}</li>` : `<${tag}>${text.slice(start, end)}</${tag}>`;
+    const textarea = activeInputRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.slice(start, end);
+    
+    let insertText = "";
+    let cursorOffset = 0;
+
+    if (tag === 'br') {
+       insertText = "<br/>";
+       cursorOffset = 5;
+    } else if (tag === 'li') {
+       if (selectedText.length > 0) {
+           // SMART LIST: Split selection by newlines and wrap each in <li>
+           const lines = selectedText.split('\n').filter(line => line.trim() !== '');
+           const listItems = lines.map(line => `<li>${line}</li>`).join('');
+           insertText = `<ul>${listItems}</ul>`;
+           cursorOffset = insertText.length; // Move cursor to end
+       } else {
+           // Empty list item
+           insertText = "<ul><li></li></ul>";
+           cursorOffset = 8; // Position inside the li
+       }
+    } else {
+       insertText = `<${tag}>${selectedText}</${tag}>`;
+       cursorOffset = selectedText.length > 0 ? insertText.length : tag.length + 2;
+    }
+    
     const newText = text.slice(0, start) + insertText + text.slice(end);
-    if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
-    else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
-    setTimeout(() => textarea.focus(), 0);
+
+    if (itemId) {
+       updateSectionItem(sectionId, itemId, 'description', newText);
+    } else {
+       const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s);
+       updateResume({ ...resume, sections: newSections });
+    }
+
+    // Restore focus and set cursor intelligently
+    setTimeout(() => {
+        textarea.focus();
+        // If we just wrapped text, move cursor to end of insertion.
+        // If we inserted an empty tag, put cursor inside it.
+        if (selectedText.length === 0) {
+             textarea.setSelectionRange(start + cursorOffset, start + cursorOffset);
+        } else {
+             textarea.setSelectionRange(start + insertText.length, start + insertText.length);
+        }
+    }, 0);
   };
 
+  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -165,6 +211,7 @@ export default function EditorPage() {
   
   const moveSection = (index: number, direction: 'up' | 'down') => { const newSections = [...resume.sections]; if (direction === 'up' && index > 0) [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]]; else if (direction === 'down' && index < newSections.length - 1) [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]]; const newData = { ...resume, sections: newSections }; updateResume(newData); autoSave(newData); }
   const deleteSection = (id: string) => { if(!confirm('Delete section?')) return; const newData = { ...resume, sections: resume.sections.filter(s => s.id !== id) }; updateResume(newData); autoSave(newData); setActiveSectionId('basics'); }
+  
   const addPageBreak = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const breakSection: Section = { id, title: 'Page Break', type: 'break', isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -183,43 +230,75 @@ export default function EditorPage() {
     onAfterPrint: () => setIsUnlocked(false) // Re-lock after printing
   });
 
-  // --- DOWNLOAD LOGIC ---
+  // --- DOWNLOAD LOGIC (3-TIER) ---
   const onDownloadClick = async () => {
+    // 1. Premium User: Allow everything
     if (isPremium) { handlePrint(); return; }
 
     const template = TEMPLATES[selectedTemplate];
 
-    // 1. Premium Template (Always Locked)
+    // 2. Premium Template Lock
     if (template.tier === 'premium') {
-        alert("This is a Premium Template.\nUpgrade to Premium (₹199/mo) to use this design.");
+        alert("This is a Premium Template (₹199/mo).\nUpgrade to Premium or switch to Standard/Free.");
         router.push('/pricing');
         return;
     }
 
-    // 2. Free/Standard Template (Use Credit for Clean, or Download with Watermark)
-    if (credits > 0) {
-         if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark`)) {
-             const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
-             const json = await res.json();
-             if (json.success) {
-                 setCredits(json.remaining);
-                 setIsUnlocked(true); // Clean Download
-                 setTimeout(() => handlePrint(), 100);
-                 return;
+    // 3. Standard Template (Requires Credits)
+    if (template.tier === 'standard') {
+        if (credits > 0) {
+             if (confirm(`Use 1 Credit for clean download? (${credits} remaining)`)) {
+                 try {
+                     const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
+                     const json = await res.json();
+                     if (json.success) {
+                         setCredits(json.remaining);
+                         setIsUnlocked(true);
+                         setTimeout(() => handlePrint(), 100);
+                     } else {
+                         alert("Error: " + (json.error || "Failed."));
+                     }
+                 } catch (e) {
+                     alert("Network error.");
+                 }
              }
+        } else {
+             if (confirm("Standard Templates require a credit.\nPay ₹39 for 1 Clean Download?")) {
+                 router.push('/pricing');
+             }
+        }
+        return;
+    }
+
+    // 4. Free Template
+    // Option A: Clean Download (Use 1 Credit)
+    if (credits > 0) {
+         if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark (Free)`)) {
+             try {
+                 const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
+                 const json = await res.json();
+                 if (json.success) {
+                     setCredits(json.remaining);
+                     setIsUnlocked(true); // Unlock Clean Mode
+                     setTimeout(() => handlePrint(), 100);
+                 } else {
+                     alert("Error using credit.");
+                 }
+             } catch (e) {
+                 alert("Network error.");
+             }
+             return;
          }
     } else {
-         if (confirm("Download watermarked version?\n\nClick OK to Download (Free).\nClick Cancel to Upgrade for Clean PDF (₹39).")) {
-             handlePrint(); // Watermarked Download
-             return;
-         } else {
+         // Option B: Upsell if 0 credits
+         if (confirm(`📄 Download Options\n\nClick OK to remove the watermark for ₹39.\nClick CANCEL to download for FREE with watermark.`)) {
              router.push('/pricing');
              return;
          }
     }
     
-    // Fallback if they canceled credit usage
-    handlePrint();
+    // Option C: Download with Watermark (Free/Standard fallback if user cancels payment)
+    handlePrint(); 
   }
 
   const onSelectTemplate = (id: string) => {
@@ -311,12 +390,13 @@ export default function EditorPage() {
                    </div>
                 </div>
              </div>
-           
 
            {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+              
               <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10 print:transform-none print:scale-100 print:shadow-none print:m-0">
+                 {/* KEEP PREVIEW MOUNTED: Uses absolute positioning to hide/show instead of unmounting */}
                  <div ref={componentRef} className="text-slate-800">
                     <div style={{ fontFamily: design.font }}>
                        <CurrentTemplate data={resume} theme={design} isPremium={isPremium || isUnlocked} />

@@ -84,7 +84,7 @@ const Page = ({ children, font, className = "", style = {} }: { children: React.
 
 const RichText = ({ content, className = "" }: { content?: string, className?: string }) => {
   if (!content) return null;
-  return <div className={`rte-content ${className}`} dangerouslySetInnerHTML={{ __html: content }} />;
+  return <div className={`rte-content [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 ${className}`} dangerouslySetInnerHTML={{ __html: content }} />;
 };
 
 const SectionRenderer = ({ section, theme, className = "", textColor, subTextColor, dateColor, tagBg, tagText, tagBorder }: any) => {
@@ -98,27 +98,24 @@ const SectionRenderer = ({ section, theme, className = "", textColor, subTextCol
   const tBg = tagBg || "bg-slate-100";
   const tTxt = tagText || "text-slate-700";
   const tBorder = tagBorder || "border-slate-200";
+  const subTxtColor = subTextColor || "";
 
   return (
     <div className={`mb-6 ${className}`} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
       <h3 className={`uppercase tracking-widest font-bold border-b-2 pb-1 mb-3 ${styles.sectionTitle}`} style={headerStyle}>{section.title}</h3>
       {section.type === 'text' && <RichText content={section.content} className={`leading-relaxed text-slate-700 ${styles.body} ${txtColor}`} />}
       {section.type === 'skills' && <div className="flex flex-wrap gap-2">{section.items.flatMap((i:any) => i.tags || []).map((tag:string, idx:number) => <span key={idx} className={`px-3 py-1.5 rounded-md font-medium border ${tBg} ${tTxt} ${tBorder} print:border-slate-300 ${styles.tag}`}>{tag}</span>)}</div>}
-      {section.type === 'list' && <div className={styles.spacing}>{section.items.map((item:any) => <div key={item.id} style={{ breakInside: 'avoid' }}><div className="flex justify-between items-baseline"><h4 className={`font-bold ${txtColor} ${styles.itemTitle}`}>{item.title}</h4><span className={`font-mono px-2 py-0.5 rounded whitespace-nowrap ${dtColor} ${styles.date}`}>{item.date}</span></div>{item.subtitle && <div className={`font-bold mb-1 opacity-90 ${subTextColor || ''} ${styles.itemSubtitle}`} style={{ color: subTextColor ? undefined : theme.color }}>{item.subtitle}</div>}<RichText content={item.description} className={`leading-relaxed mt-1 ${txtColor} ${styles.body}`} /></div>)}</div>}
+      {section.type === 'list' && <div className={styles.spacing}>{section.items.map((item:any) => <div key={item.id} style={{ breakInside: 'avoid' }}><div className="flex justify-between items-baseline"><h4 className={`font-bold ${txtColor} ${styles.itemTitle}`}>{item.title}</h4><span className={`font-mono px-2 py-0.5 rounded whitespace-nowrap ${dtColor} ${styles.date}`}>{item.date}</span></div>{item.subtitle && <div className={`font-bold mb-1 opacity-90 ${subTxtColor} ${styles.itemSubtitle}`} style={{ color: subTextColor ? undefined : theme.color }}>{item.subtitle}</div>}<RichText content={item.description} className={`leading-relaxed mt-1 ${txtColor} ${styles.body}`} /></div>)}</div>}
     </div>
   );
 };
 
-// --- FULL PAGE WATERMARK ---
 const Watermark = () => (
   <div className="absolute inset-0 z-50 flex flex-col items-center justify-center pointer-events-none overflow-hidden select-none print:block">
-     {/* Large central watermark */}
-     <div className="transform -rotate-45 opacity-[0.08] text-slate-900 text-6xl font-black uppercase whitespace-nowrap border-8 border-slate-900 p-8 rounded-3xl tracking-widest">
+     <div className="transform -rotate-45 opacity-[0.05] text-slate-900 text-6xl font-black uppercase whitespace-nowrap border-8 border-slate-900 p-8 rounded-3xl tracking-widest">
         MyCV.guru
      </div>
-     
-     {/* Repeating background pattern for full coverage */}
-     <div className="absolute inset-0 opacity-[0.03] flex flex-wrap content-center justify-center gap-32 transform -rotate-12 scale-150 pointer-events-none">
+     <div className="absolute inset-0 opacity-[0.02] flex flex-wrap content-center justify-center gap-32 transform -rotate-12 scale-150 pointer-events-none">
         {Array.from({ length: 20 }).map((_, i) => (
            <div key={i} className="text-4xl font-bold text-black uppercase">MyCV.guru</div>
         ))}
@@ -142,7 +139,7 @@ const MultiPageWrapper = ({ data, theme, renderPage, pageStyle, className = "", 
   );
 };
 
-// --- TEMPLATES (1-20) ---
+// --- TEMPLATES ---
 
 export const Template1 = ({ data, theme, isPremium }: TemplateProps) => (
   <MultiPageWrapper 
@@ -155,7 +152,18 @@ export const Template1 = ({ data, theme, isPremium }: TemplateProps) => (
       return (
         <div className="flex h-full text-slate-800">
           <div className="w-[32%] p-8 border-r border-slate-200/50 min-h-[297mm]">
-            {index === 0 && <div className="mb-10">{data.basics.image && <img src={data.basics.image} className="w-32 h-32 rounded-full object-cover mb-6 border-4 border-white shadow-md mx-auto" alt="Profile"/>}<h1 className={`font-bold leading-tight mb-2 ${styles.name}`} style={{ color: theme.color }}>{data.basics.fullName}</h1><p className={`font-bold uppercase tracking-widest text-slate-500 ${styles.job}`}>{data.basics.jobTitle}</p><div className={`space-y-3 text-slate-600 mt-8 ${styles.contact}`}><div className="flex gap-3 items-center"><Mail size={14}/> <span className="break-all">{data.basics.email}</span></div><div className="flex gap-3 items-center"><Phone size={14}/> {data.basics.phone}</div>{data.basics.location && <div className="flex gap-3 items-center"><MapPin size={14}/> {data.basics.location}</div>}</div></div>}
+            {index === 0 && (
+              <div className="mb-10">
+                {data.basics.image && <img src={data.basics.image} className="w-32 h-32 rounded-full object-cover mb-6 border-4 border-white shadow-md mx-auto" alt="Profile"/>}
+                <h1 className={`font-bold leading-tight mb-2 ${styles.name}`} style={{ color: theme.color }}>{data.basics.fullName}</h1>
+                <p className={`font-bold uppercase tracking-widest text-slate-500 ${styles.job}`}>{data.basics.jobTitle}</p>
+                <div className={`space-y-3 text-slate-600 mt-8 ${styles.contact}`}>
+                  <div className="flex gap-3 items-center"><Mail size={14}/> <span className="break-all">{data.basics.email}</span></div>
+                  <div className="flex gap-3 items-center"><Phone size={14}/> {data.basics.phone}</div>
+                  {data.basics.location && <div className="flex gap-3 items-center"><MapPin size={14}/> {data.basics.location}</div>}
+                </div>
+              </div>
+            )}
             {left.map((s:any) => <SectionRenderer key={s.id} section={s} theme={theme} />)}
           </div>
           <div className="w-[68%] p-10">
