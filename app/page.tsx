@@ -22,6 +22,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
+      
+      {/* NAVBAR */}
       <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -34,6 +36,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
+      {/* HERO */}
       <div className="relative pt-20 pb-24 lg:pt-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-bold uppercase tracking-wider mb-8">
@@ -57,6 +60,7 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* FEATURES */}
       <div id="features" className="bg-slate-50 py-24 border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16"><h2 className="text-3xl font-bold mb-4">Why Choose MyCV.guru?</h2><p className="text-slate-500">Everything you need to land your dream job.</p></div>
@@ -75,6 +79,7 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* PRICING */}
       <div className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16"><h2 className="text-3xl font-bold text-slate-900 mb-4">Fair & Simple Pricing</h2><p className="text-slate-500">Start for free. Pay only when you're happy.</p></div>
@@ -86,7 +91,7 @@ export default function LandingPage() {
               <p className="text-sm text-slate-500 mb-6">Basic access to build your resume.</p>
               <ul className="space-y-3 mb-8 text-sm text-slate-600 font-medium">
                 <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> 1 Clean Download</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Unlimited Watermarked Downloads</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Unlimited Watermarked</li>
                 <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-500"/> Access Basic Templates</li>
               </ul>
               <Link href="/signup" className="block text-center w-full py-3 rounded-xl bg-slate-100 text-slate-900 font-bold hover:bg-slate-200">Sign Up Free</Link>
@@ -100,8 +105,8 @@ export default function LandingPage() {
               <p className="text-sm text-slate-400 mb-6">Pay only for what you need.</p>
               <ul className="space-y-3 mb-8 text-sm font-medium">
                 <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> 1 Clean PDF Download</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> Access Basic & Standard Templates</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> ATS-Friendly Format</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> Access Basic & Standard</li>
+                <li className="flex gap-3"><CheckCircle2 size={18} className="text-green-400"/> Credits Never Expire</li>
               </ul>
               <Link href="/signup" className="block text-center w-full py-3 rounded-xl bg-white text-slate-900 font-bold hover:bg-indigo-50">Get Started</Link>
             </div>

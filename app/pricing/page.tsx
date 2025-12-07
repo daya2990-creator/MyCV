@@ -12,12 +12,12 @@ const PLANS = [
     name: 'Free Tier',
     price: 0,
     period: 'forever',
-    label: 'Basic',
+    label: 'Starter',
     features: [
-      '1 Clean Download (New Users)',
+      '1 Clean Download (Free Credit)',
       'Unlimited Watermarked Downloads',
       'Access Basic Templates Only',
-      'Create Unlimited Resumes'
+      'No Watermark-free after 1 credit'
     ],
     color: 'bg-slate-50 border-slate-200 text-slate-800',
     btnColor: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
@@ -31,11 +31,11 @@ const PLANS = [
     period: 'one-time',
     label: 'Pay Per Download',
     features: [
-      '1 Clean PDF Download',
+      '1 Clean Download',
       'Unlimited Watermarked Downloads',
       'Access Basic & Standard Templates',
-      'ATS-Friendly Format',
-      'Credits Never Expire'
+      'Uses 1 Credit per Download',
+      'Premium Templates Locked'
     ],
     color: 'bg-blue-50 border-blue-200 text-blue-900',
     btnColor: 'bg-blue-600 text-white hover:bg-blue-700',
@@ -44,15 +44,15 @@ const PLANS = [
   },
   {
     id: 'premium',
-    name: 'Premium',
+    name: 'Premium Pro',
     price: 199,
     period: 'per month',
     label: 'Best Value',
     features: [
       'Unlimited Clean Downloads',
-      'Access ALL Templates (Premium)',
-      'No Watermarks Ever',
-      'High-Quality PDF Export',
+      'Access Basic + Standard + Premium',
+      'No Credits Needed',
+      'Subscription Status = Pro',
       'Priority Support'
     ],
     color: 'bg-indigo-900 border-indigo-800 text-white',

@@ -19,32 +19,26 @@ import {
   ResumeData, Section, SectionItem 
 } from '../../../components/ResumeTemplates'
 
-// --- TEMPLATE TIER CONFIG ---
 const TEMPLATES: Record<string, any> = {
-  // FREE (Basic)
   't1':  { component: Template1, name: "Structure", category: 'modern', tier: 'free' },
   't2':  { component: Template2, name: "Clarity", category: 'modern', tier: 'free' },
-  't6':  { component: Template6, name: "Logic", category: 'professional', tier: 'free' },
-  't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
-
-  // STANDARD (Professional - ₹39 or Credit)
   't3':  { component: Template3, name: "Balance", category: 'professional', tier: 'standard' },
+  't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
+  't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
+  't6':  { component: Template6, name: "Logic", category: 'professional', tier: 'free' },
+  't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
+  't8':  { component: Template8, name: "Slate", category: 'modern', tier: 'premium' },
   't9':  { component: Template9, name: "Onyx", category: 'modern', tier: 'standard' },
   't10': { component: Template10, name: "Pike", category: 'modern', tier: 'standard' },
   't11': { component: Template11, name: "Kakuna", category: 'professional', tier: 'standard' },
-  't14': { component: Template14, name: "Classic", category: 'professional', tier: 'standard' },
-  't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
-  't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
-
-  // PREMIUM (Creative/Complex - ₹199 Only)
-  't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
-  't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
-  't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
-  't8':  { component: Template8, name: "Slate", category: 'modern', tier: 'premium' },
+  't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
   't13': { component: Template13, name: "Studio", category: 'modern', tier: 'premium' },
+  't14': { component: Template14, name: "Classic", category: 'professional', tier: 'standard' },
   't15': { component: Template15, name: "Elevate", category: 'creative', tier: 'premium' },
   't16': { component: Template16, name: "Terminal", category: 'creative', tier: 'premium' },
+  't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
   't18': { component: Template18, name: "Impact", category: 'modern', tier: 'premium' },
+  't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
   't20': { component: Template20, name: "Frame", category: 'creative', tier: 'premium' },
 };
 
@@ -155,11 +149,41 @@ export default function EditorPage() {
   const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
     const textarea = activeInputRef.current; if (!textarea) return;
     const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
-    let insertText = tag === 'br' ? "<br/>" : tag === 'li' ? `<li>${text.slice(start, end)}</li>` : `<${tag}>${text.slice(start, end)}</${tag}>`;
+    let insertText = "";
+    let cursorOffset = 0;
+
+    if (tag === 'br') {
+       insertText = "<br/>";
+       cursorOffset = 5;
+    } else if (tag === 'li') {
+       const selectedText = text.slice(start, end);
+       if (selectedText.length > 0) {
+           const lines = selectedText.split('\n').filter(line => line.trim() !== '');
+           const listHTML = `<ul>${lines.map(line => `<li>${line.trim()}</li>`).join('')}</ul>`;
+           const newText = text.slice(0, start) + listHTML + text.slice(end);
+           if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
+           else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
+           setTimeout(() => { textarea.focus(); textarea.setSelectionRange(start + listHTML.length, start + listHTML.length); }, 0);
+           return;
+       } else {
+           insertText = "<ul><li></li></ul>";
+           cursorOffset = 8;
+       }
+    } else {
+       const selectedText = text.slice(start, end);
+       insertText = `<${tag}>${selectedText}</${tag}>`;
+       cursorOffset = selectedText.length > 0 ? insertText.length : tag.length + 2;
+    }
+    
     const newText = text.slice(0, start) + insertText + text.slice(end);
     if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
     else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
-    setTimeout(() => textarea.focus(), 0);
+
+    setTimeout(() => {
+        textarea.focus();
+        if (text.slice(start, end).length === 0) textarea.setSelectionRange(start + cursorOffset, start + cursorOffset);
+        else textarea.setSelectionRange(start + insertText.length, start + insertText.length);
+    }, 0);
   };
 
   const addSection = () => { 
@@ -184,34 +208,22 @@ export default function EditorPage() {
   const loadSample = () => { if(confirm('Overwrite with sample data?')) { updateResume(SAMPLE_RESUME); autoSave(SAMPLE_RESUME); } }
 
   const handlePrint = useReactToPrint({ 
-    contentRef: componentRef, 
+    content: () => componentRef.current, // FIXED: Correct prop for v2
     documentTitle: resume.basics.fullName || 'Resume',
     onAfterPrint: () => setIsUnlocked(false) // Re-lock after printing
   });
 
-  // --- DOWNLOAD LOGIC ---
   const onDownloadClick = async () => {
     if (isPremium) { handlePrint(); return; }
 
     const template = TEMPLATES[selectedTemplate];
 
-    // 1. Premium Template (Locked)
     if (template.tier === 'premium') {
         alert("This is a Premium Template.\nUpgrade to Premium (₹199/mo) to use this design.");
         router.push('/pricing');
         return;
     }
 
-    // 2. Standard Template (Locked for Free Users without Credit)
-    // If standard template, and no credits, must buy credit. No watermark option.
-    if (template.tier === 'standard' && credits === 0) {
-        if(confirm("Standard Templates require a credit.\nPay ₹39 for 1 Clean Download?")) {
-            router.push('/pricing');
-        }
-        return;
-    }
-
-    // 3. Free/Standard Template (Use Credit)
     if (credits > 0) {
          if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark`)) {
              try {
@@ -219,7 +231,7 @@ export default function EditorPage() {
                  const json = await res.json();
                  if (json.success) {
                      setCredits(json.remaining);
-                     setIsUnlocked(true); // Unlock clean mode
+                     setIsUnlocked(true); 
                      setTimeout(() => handlePrint(), 100);
                  } else {
                      alert("Error using credit.");
@@ -230,14 +242,12 @@ export default function EditorPage() {
              return;
          }
     } else {
-         // 4. Free Template (0 Credits) - Upsell
          if (confirm(`📄 Download Options\n\nClick OK to remove the watermark for ₹39.\nClick CANCEL to download for FREE with watermark.`)) {
              router.push('/pricing');
              return;
          }
     }
     
-    // 5. Fallback: Download with Watermark
     handlePrint(); 
   }
 
@@ -277,8 +287,6 @@ export default function EditorPage() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        
-        {/* LEFT NAV */}
         <nav className="w-64 bg-white border-r flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
            <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><span className="text-xs font-bold uppercase text-slate-400">Contents</span><button onClick={() => setShowAddModal(true)} className="text-xs bg-white border px-2 py-1 rounded hover:bg-indigo-50 text-indigo-600 flex items-center gap-1"><Plus size={12}/> Add</button></div>
            <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -293,7 +301,6 @@ export default function EditorPage() {
         </nav>
 
         <div className="flex-1 bg-slate-100 relative z-10 flex flex-col overflow-hidden">
-           {/* EDIT MODE */}
            <div className={`flex-1 flex flex-col h-full bg-white animate-in slide-in-from-bottom-4 fade-in duration-300 ${viewMode === 'edit' ? 'block' : 'hidden'}`}>
                 <div className="p-4 border-b flex items-center justify-between bg-white"><button onClick={() => setViewMode('preview')} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2"><ArrowLeft size={16}/> Back to Preview</button><span className="font-bold text-slate-800 text-sm uppercase tracking-wider">Editing: {activeSectionId === 'basics' ? 'Basics' : resume.sections.find(s => s.id === activeSectionId)?.title}</span><div className="w-20"></div></div>
                 <div className="flex-1 overflow-y-auto p-8">
@@ -331,7 +338,6 @@ export default function EditorPage() {
                 </div>
              </div>
 
-           {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
               <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10 print:transform-none print:scale-100 print:shadow-none print:m-0">
@@ -344,7 +350,6 @@ export default function EditorPage() {
            </div>
         </div>
 
-        {/* COLUMN 3: RIGHT CONTROL CENTER */}
         <div className="w-[350px] bg-white border-l flex flex-col z-20 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
            <div className="flex border-b bg-slate-50"><button onClick={() => setActiveTab('design')} className={`flex-1 py-3 text-xs font-bold uppercase flex items-center justify-center gap-2 transition-colors ${activeTab === 'design' ? 'bg-white border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}><Palette size={14}/> Design</button><button onClick={() => setActiveTab('structure')} className={`flex-1 py-3 text-xs font-bold uppercase flex items-center justify-center gap-2 transition-colors ${activeTab === 'structure' ? 'bg-white border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}><Layers size={14}/> Structure</button></div>
            <div className="flex-1 overflow-hidden bg-slate-50/30 relative">
