@@ -19,7 +19,6 @@ import {
   ResumeData, Section, SectionItem 
 } from '../../../components/ResumeTemplates'
 
-// --- TEMPLATE TIER CONFIG ---
 const TEMPLATES: Record<string, any> = {
   // FREE (Basic)
   't1':  { component: Template1, name: "Structure", category: 'modern', tier: 'free' },
@@ -152,16 +151,80 @@ export default function EditorPage() {
   const manualSave = () => { autoSave(resume); setViewMode('preview'); }
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
+  // --- IMPROVED FORMATTER (Word-Like Logic) ---
   const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
-    const textarea = activeInputRef.current; if (!textarea) return;
-    const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
-    let insertText = tag === 'br' ? "<br/>" : tag === 'li' ? `<li>${text.slice(start, end)}</li>` : `<${tag}>${text.slice(start, end)}</${tag}>`;
-    const newText = text.slice(0, start) + insertText + text.slice(end);
-    if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
-    else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
-    setTimeout(() => textarea.focus(), 0);
+    const textarea = activeInputRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    
+    let newText = text;
+    let newCursorPos = end;
+
+    if (tag === 'br') {
+       const insert = "<br/>";
+       newText = text.slice(0, start) + insert + text.slice(end);
+       newCursorPos = start + insert.length;
+    } else if (tag === 'li') {
+       // List Logic
+       if (start !== end) {
+           // If text selected: Split lines and bullet each one
+           const selectedText = text.slice(start, end);
+           const lines = selectedText.split('\n').filter(l => l.trim() !== '');
+           if (lines.length > 0) {
+               const listHTML = `<ul>${lines.map(line => `<li>${line.trim()}</li>`).join('')}</ul>`;
+               newText = text.slice(0, start) + listHTML + text.slice(end);
+               newCursorPos = start + listHTML.length;
+           }
+       } else {
+           // No selection: "Smart Line Detection"
+           // 1. Find start of current line (look back for \n)
+           let lineStart = text.lastIndexOf('\n', start - 1);
+           lineStart = lineStart === -1 ? 0 : lineStart + 1;
+
+           // 2. Find end of current line (look forward for \n)
+           let lineEnd = text.indexOf('\n', start);
+           if (lineEnd === -1) lineEnd = text.length;
+
+           // 3. Extract the line content
+           const lineContent = text.slice(lineStart, lineEnd).trim();
+
+           // 4. Replace the line with a bullet
+           if (lineContent) {
+             const listItem = `<ul><li>${lineContent}</li></ul>`;
+             newText = text.slice(0, lineStart) + listItem + text.slice(lineEnd);
+             newCursorPos = lineStart + listItem.length;
+           } else {
+             // Empty line? Just insert empty bullet
+             const emptyItem = "<ul><li></li></ul>";
+             newText = text.slice(0, start) + emptyItem + text.slice(end);
+             newCursorPos = start + 8; // Place cursor inside <li>|</li>
+           }
+       }
+    } else {
+       // Bold / Italic / Underline
+       const selectedText = text.slice(start, end);
+       const insert = `<${tag}>${selectedText}</${tag}>`;
+       newText = text.slice(0, start) + insert + text.slice(end);
+       newCursorPos = selectedText.length > 0 ? start + insert.length : start + tag.length + 2;
+    }
+
+    if (itemId) {
+       updateSectionItem(sectionId, itemId, 'description', newText);
+    } else {
+       const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s);
+       updateResume({ ...resume, sections: newSections });
+    }
+
+    setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
   };
 
+  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -189,23 +252,19 @@ export default function EditorPage() {
     onAfterPrint: () => setIsUnlocked(false)
   });
 
-  // --- DOWNLOAD LOGIC ---
   const onDownloadClick = async () => {
     if (isPremium) { handlePrint(); return; }
 
     const template = TEMPLATES[selectedTemplate];
 
-    // 1. Premium Template
     if (template.tier === 'premium') {
         alert("This is a Premium Template.\nUpgrade to Premium (₹199/mo) to use this design.");
         router.push('/pricing');
         return;
     }
 
-    // 2. Standard/Free Template
     if (credits > 0) {
          if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark`)) {
-             // Clean Download
              try {
                  const res = await fetch('/api/user/deduct-credit', { method: 'POST' });
                  const json = await res.json();
@@ -222,7 +281,6 @@ export default function EditorPage() {
              return;
          }
     } else {
-         // No Credits - Upsell
          if (confirm("Remove Watermark for ₹39?\n\nClick OK to Pay.\nClick Cancel to Download FREE (Watermarked).")) {
              router.push('/pricing');
              return;
