@@ -19,6 +19,7 @@ import {
   ResumeData, Section, SectionItem 
 } from '../../../components/ResumeTemplates'
 
+// --- TEMPLATE TIER CONFIG ---
 const TEMPLATES: Record<string, any> = {
   // FREE (Basic)
   't1':  { component: Template1, name: "Structure", category: 'modern', tier: 'free' },
@@ -26,7 +27,7 @@ const TEMPLATES: Record<string, any> = {
   't6':  { component: Template6, name: "Logic", category: 'professional', tier: 'free' },
   't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
 
-  // STANDARD (Professional)
+  // STANDARD (Professional - ₹39 or Credit)
   't3':  { component: Template3, name: "Balance", category: 'professional', tier: 'standard' },
   't9':  { component: Template9, name: "Onyx", category: 'modern', tier: 'standard' },
   't10': { component: Template10, name: "Pike", category: 'modern', tier: 'standard' },
@@ -35,7 +36,7 @@ const TEMPLATES: Record<string, any> = {
   't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
   't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
 
-  // PREMIUM (Creative)
+  // PREMIUM (Creative/Complex - ₹199 Only)
   't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
   't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
   't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
@@ -109,7 +110,7 @@ export default function EditorPage() {
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
-  const [isUnlocked, setIsUnlocked] = useState(false) 
+  const [isUnlocked, setIsUnlocked] = useState(false) // Tracks temporary unlock for print
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
@@ -151,80 +152,16 @@ export default function EditorPage() {
   const manualSave = () => { autoSave(resume); setViewMode('preview'); }
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
-  // --- IMPROVED FORMATTER (Word-Like Logic) ---
   const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
-    const textarea = activeInputRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-    
-    let newText = text;
-    let newCursorPos = end;
-
-    if (tag === 'br') {
-       const insert = "<br/>";
-       newText = text.slice(0, start) + insert + text.slice(end);
-       newCursorPos = start + insert.length;
-    } else if (tag === 'li') {
-       // List Logic
-       if (start !== end) {
-           // If text selected: Split lines and bullet each one
-           const selectedText = text.slice(start, end);
-           const lines = selectedText.split('\n').filter(l => l.trim() !== '');
-           if (lines.length > 0) {
-               const listHTML = `<ul>${lines.map(line => `<li>${line.trim()}</li>`).join('')}</ul>`;
-               newText = text.slice(0, start) + listHTML + text.slice(end);
-               newCursorPos = start + listHTML.length;
-           }
-       } else {
-           // No selection: "Smart Line Detection"
-           // 1. Find start of current line (look back for \n)
-           let lineStart = text.lastIndexOf('\n', start - 1);
-           lineStart = lineStart === -1 ? 0 : lineStart + 1;
-
-           // 2. Find end of current line (look forward for \n)
-           let lineEnd = text.indexOf('\n', start);
-           if (lineEnd === -1) lineEnd = text.length;
-
-           // 3. Extract the line content
-           const lineContent = text.slice(lineStart, lineEnd).trim();
-
-           // 4. Replace the line with a bullet
-           if (lineContent) {
-             const listItem = `<ul><li>${lineContent}</li></ul>`;
-             newText = text.slice(0, lineStart) + listItem + text.slice(lineEnd);
-             newCursorPos = lineStart + listItem.length;
-           } else {
-             // Empty line? Just insert empty bullet
-             const emptyItem = "<ul><li></li></ul>";
-             newText = text.slice(0, start) + emptyItem + text.slice(end);
-             newCursorPos = start + 8; // Place cursor inside <li>|</li>
-           }
-       }
-    } else {
-       // Bold / Italic / Underline
-       const selectedText = text.slice(start, end);
-       const insert = `<${tag}>${selectedText}</${tag}>`;
-       newText = text.slice(0, start) + insert + text.slice(end);
-       newCursorPos = selectedText.length > 0 ? start + insert.length : start + tag.length + 2;
-    }
-
-    if (itemId) {
-       updateSectionItem(sectionId, itemId, 'description', newText);
-    } else {
-       const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s);
-       updateResume({ ...resume, sections: newSections });
-    }
-
-    setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
+    const textarea = activeInputRef.current; if (!textarea) return;
+    const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
+    let insertText = tag === 'br' ? "<br/>" : tag === 'li' ? `<li>${text.slice(start, end)}</li>` : `<${tag}>${text.slice(start, end)}</${tag}>`;
+    const newText = text.slice(0, start) + insertText + text.slice(end);
+    if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
+    else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
+    setTimeout(() => textarea.focus(), 0);
   };
 
-  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -249,20 +186,32 @@ export default function EditorPage() {
   const handlePrint = useReactToPrint({ 
     contentRef: componentRef, 
     documentTitle: resume.basics.fullName || 'Resume',
-    onAfterPrint: () => setIsUnlocked(false)
+    onAfterPrint: () => setIsUnlocked(false) // Re-lock after printing
   });
 
+  // --- DOWNLOAD LOGIC ---
   const onDownloadClick = async () => {
     if (isPremium) { handlePrint(); return; }
 
     const template = TEMPLATES[selectedTemplate];
 
+    // 1. Premium Template (Locked)
     if (template.tier === 'premium') {
         alert("This is a Premium Template.\nUpgrade to Premium (₹199/mo) to use this design.");
         router.push('/pricing');
         return;
     }
 
+    // 2. Standard Template (Locked for Free Users without Credit)
+    // If standard template, and no credits, must buy credit. No watermark option.
+    if (template.tier === 'standard' && credits === 0) {
+        if(confirm("Standard Templates require a credit.\nPay ₹39 for 1 Clean Download?")) {
+            router.push('/pricing');
+        }
+        return;
+    }
+
+    // 3. Free/Standard Template (Use Credit)
     if (credits > 0) {
          if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark`)) {
              try {
@@ -270,7 +219,7 @@ export default function EditorPage() {
                  const json = await res.json();
                  if (json.success) {
                      setCredits(json.remaining);
-                     setIsUnlocked(true);
+                     setIsUnlocked(true); // Unlock clean mode
                      setTimeout(() => handlePrint(), 100);
                  } else {
                      alert("Error using credit.");
@@ -281,13 +230,14 @@ export default function EditorPage() {
              return;
          }
     } else {
-         if (confirm("Remove Watermark for ₹39?\n\nClick OK to Pay.\nClick Cancel to Download FREE (Watermarked).")) {
+         // 4. Free Template (0 Credits) - Upsell
+         if (confirm(`📄 Download Options\n\nClick OK to remove the watermark for ₹39.\nClick CANCEL to download for FREE with watermark.`)) {
              router.push('/pricing');
              return;
          }
     }
     
-    // Fallback: Download with Watermark
+    // 5. Fallback: Download with Watermark
     handlePrint(); 
   }
 
@@ -380,7 +330,6 @@ export default function EditorPage() {
                    </div>
                 </div>
              </div>
-           
 
            {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
