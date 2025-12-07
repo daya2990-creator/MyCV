@@ -11,12 +11,15 @@
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.39.0",
+    "@supabase/ssr": "^0.1.0",
     "lucide-react": "^0.294.0",
-    "next": "16.0.4",
+    "next": "15.0.3",
     "razorpay": "^2.9.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-to-print": "^2.14.15"
+    "react-to-print": "^2.14.15",
+    "resend": "^2.0.0",
+    "openai": "^4.20.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -24,7 +27,7 @@
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.54.0",
-    "eslint-config-next": "16.0.4",
+    "eslint-config-next": "15.0.3",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5",
     "typescript": "^5.3.2"
