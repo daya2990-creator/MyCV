@@ -19,26 +19,32 @@ import {
   ResumeData, Section, SectionItem 
 } from '../../../components/ResumeTemplates'
 
+// --- TEMPLATE TIER CONFIG ---
 const TEMPLATES: Record<string, any> = {
+  // FREE (Basic)
   't1':  { component: Template1, name: "Structure", category: 'modern', tier: 'free' },
   't2':  { component: Template2, name: "Clarity", category: 'modern', tier: 'free' },
-  't3':  { component: Template3, name: "Balance", category: 'professional', tier: 'standard' },
-  't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
-  't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
   't6':  { component: Template6, name: "Logic", category: 'professional', tier: 'free' },
-  't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
-  't8':  { component: Template8, name: "Slate", category: 'modern', tier: 'premium' },
+  't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
+
+  // STANDARD (Professional - ₹39)
+  't3':  { component: Template3, name: "Balance", category: 'professional', tier: 'standard' },
   't9':  { component: Template9, name: "Onyx", category: 'modern', tier: 'standard' },
   't10': { component: Template10, name: "Pike", category: 'modern', tier: 'standard' },
   't11': { component: Template11, name: "Kakuna", category: 'professional', tier: 'standard' },
-  't12': { component: Template12, name: "Executive", category: 'professional', tier: 'free' },
-  't13': { component: Template13, name: "Studio", category: 'modern', tier: 'premium' },
   't14': { component: Template14, name: "Classic", category: 'professional', tier: 'standard' },
+  't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
+  't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
+
+  // PREMIUM (Creative - ₹199)
+  't4':  { component: Template4, name: "Profile", category: 'creative', tier: 'premium' },
+  't5':  { component: Template5, name: "Vivid", category: 'creative', tier: 'premium' },
+  't7':  { component: Template7, name: "Timeline", category: 'creative', tier: 'premium' },
+  't8':  { component: Template8, name: "Slate", category: 'modern', tier: 'premium' },
+  't13': { component: Template13, name: "Studio", category: 'modern', tier: 'premium' },
   't15': { component: Template15, name: "Elevate", category: 'creative', tier: 'premium' },
   't16': { component: Template16, name: "Terminal", category: 'creative', tier: 'premium' },
-  't17': { component: Template17, name: "Concise", category: 'professional', tier: 'standard' },
   't18': { component: Template18, name: "Impact", category: 'modern', tier: 'premium' },
-  't19': { component: Template19, name: "Standard", category: 'professional', tier: 'standard' },
   't20': { component: Template20, name: "Frame", category: 'creative', tier: 'premium' },
 };
 
@@ -70,19 +76,60 @@ const SAMPLE_RESUME: ResumeData = {
   ]
 };
 
-const RichTextToolbar = ({ onAction }: { onAction: (tag: string) => void }) => (
-  <div className="flex items-center gap-1 mb-2 bg-slate-100 p-1 rounded border border-slate-200 w-fit">
-    <button onClick={() => onAction('b')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Bold"><Bold size={14}/></button>
-    <button onClick={() => onAction('i')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Italic"><Italic size={14}/></button>
-    <button onClick={() => onAction('u')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Underline"><Underline size={14}/></button>
-    <div className="w-px h-4 bg-slate-300 mx-1"></div>
-    <button onClick={() => onAction('li')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Bullet List"><List size={14}/></button>
-    <button onClick={() => onAction('br')} className="p-1.5 hover:bg-white rounded text-slate-700 text-xs font-bold px-2" title="Line Break">BR</button>
-  </div>
-);
+// --- NEW WYSIWYG EDITOR COMPONENT ---
+// This replaces the old textarea with a "Word-like" editor
+const WYSIWYGEditor = ({ value, onChange, label }: any) => {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const isInternalUpdate = useRef(false);
+
+  // Sync external value changes to editor (only if not focused or completely different)
+  useEffect(() => {
+    if (editorRef.current && !isInternalUpdate.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value || '';
+    }
+  }, [value]);
+
+  const handleInput = () => {
+    if (editorRef.current) {
+      isInternalUpdate.current = true;
+      onChange(editorRef.current.innerHTML);
+      setTimeout(() => isInternalUpdate.current = false, 0);
+    }
+  };
+
+  const execCmd = (cmd: string, val?: string) => {
+    document.execCommand(cmd, false, val);
+    handleInput(); // Trigger update immediately
+  };
+
+  return (
+    <div className="mb-4">
+       {label && <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>}
+       <div className="border border-slate-200 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
+          {/* Toolbar */}
+          <div className="flex items-center gap-1 bg-slate-50 p-1.5 border-b border-slate-100">
+             <button onMouseDown={(e) => {e.preventDefault(); execCmd('bold');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bold"><Bold size={14}/></button>
+             <button onMouseDown={(e) => {e.preventDefault(); execCmd('italic');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Italic"><Italic size={14}/></button>
+             <button onMouseDown={(e) => {e.preventDefault(); execCmd('underline');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Underline"><Underline size={14}/></button>
+             <div className="w-px h-4 bg-slate-300 mx-1"></div>
+             <button onMouseDown={(e) => {e.preventDefault(); execCmd('insertUnorderedList');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bullet List"><List size={14}/></button>
+          </div>
+          
+          {/* Editable Area */}
+          <div 
+             ref={editorRef}
+             contentEditable
+             className="w-full p-4 text-sm min-h-[120px] max-h-[300px] overflow-y-auto outline-none prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4"
+             onInput={handleInput}
+             dangerouslySetInnerHTML={{ __html: value }} 
+          />
+       </div>
+    </div>
+  );
+};
 
 const Input = ({ label, value, onChange }: any) => (
-  <div>
+  <div className="mb-3">
     <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>
     <input className="w-full p-3 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" value={value || ''} onChange={(e) => onChange(e.target.value)}/>
   </div>
@@ -94,7 +141,6 @@ export default function EditorPage() {
   const supabase = createClientComponentClient()
   
   const componentRef = useRef<HTMLDivElement>(null)
-  const activeInputRef = useRef<HTMLTextAreaElement | null>(null); 
 
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const [activeTab, setActiveTab] = useState<'design' | 'structure'>('design')
@@ -104,7 +150,7 @@ export default function EditorPage() {
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
-  const [isUnlocked, setIsUnlocked] = useState(false) // Tracks temporary unlock for print
+  const [isUnlocked, setIsUnlocked] = useState(false) 
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
@@ -146,46 +192,7 @@ export default function EditorPage() {
   const manualSave = () => { autoSave(resume); setViewMode('preview'); }
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
-  const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
-    const textarea = activeInputRef.current; if (!textarea) return;
-    const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
-    let insertText = "";
-    let cursorOffset = 0;
-
-    if (tag === 'br') {
-       insertText = "<br/>";
-       cursorOffset = 5;
-    } else if (tag === 'li') {
-       const selectedText = text.slice(start, end);
-       if (selectedText.length > 0) {
-           const lines = selectedText.split('\n').filter(line => line.trim() !== '');
-           const listHTML = `<ul>${lines.map(line => `<li>${line.trim()}</li>`).join('')}</ul>`;
-           const newText = text.slice(0, start) + listHTML + text.slice(end);
-           if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
-           else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
-           setTimeout(() => { textarea.focus(); textarea.setSelectionRange(start + listHTML.length, start + listHTML.length); }, 0);
-           return;
-       } else {
-           insertText = "<ul><li></li></ul>";
-           cursorOffset = 8;
-       }
-    } else {
-       const selectedText = text.slice(start, end);
-       insertText = `<${tag}>${selectedText}</${tag}>`;
-       cursorOffset = selectedText.length > 0 ? insertText.length : tag.length + 2;
-    }
-    
-    const newText = text.slice(0, start) + insertText + text.slice(end);
-    if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
-    else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
-
-    setTimeout(() => {
-        textarea.focus();
-        if (text.slice(start, end).length === 0) textarea.setSelectionRange(start + cursorOffset, start + cursorOffset);
-        else textarea.setSelectionRange(start + insertText.length, start + insertText.length);
-    }, 0);
-  };
-
+  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -195,6 +202,7 @@ export default function EditorPage() {
   
   const moveSection = (index: number, direction: 'up' | 'down') => { const newSections = [...resume.sections]; if (direction === 'up' && index > 0) [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]]; else if (direction === 'down' && index < newSections.length - 1) [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]]; const newData = { ...resume, sections: newSections }; updateResume(newData); autoSave(newData); }
   const deleteSection = (id: string) => { if(!confirm('Delete section?')) return; const newData = { ...resume, sections: resume.sections.filter(s => s.id !== id) }; updateResume(newData); autoSave(newData); setActiveSectionId('basics'); }
+  
   const addPageBreak = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const breakSection: Section = { id, title: 'Page Break', type: 'break', isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -208,9 +216,9 @@ export default function EditorPage() {
   const loadSample = () => { if(confirm('Overwrite with sample data?')) { updateResume(SAMPLE_RESUME); autoSave(SAMPLE_RESUME); } }
 
   const handlePrint = useReactToPrint({ 
-    content: () => componentRef.current, // FIXED: Correct prop for v2
+    contentRef: componentRef, 
     documentTitle: resume.basics.fullName || 'Resume',
-    onAfterPrint: () => setIsUnlocked(false) // Re-lock after printing
+    onAfterPrint: () => setIsUnlocked(false)
   });
 
   const onDownloadClick = async () => {
@@ -231,7 +239,7 @@ export default function EditorPage() {
                  const json = await res.json();
                  if (json.success) {
                      setCredits(json.remaining);
-                     setIsUnlocked(true); 
+                     setIsUnlocked(true);
                      setTimeout(() => handlePrint(), 100);
                  } else {
                      alert("Error using credit.");
@@ -248,6 +256,7 @@ export default function EditorPage() {
          }
     }
     
+    // Fallback: Download with Watermark
     handlePrint(); 
   }
 
@@ -287,6 +296,8 @@ export default function EditorPage() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
+        
+        {/* LEFT NAV */}
         <nav className="w-64 bg-white border-r flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
            <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><span className="text-xs font-bold uppercase text-slate-400">Contents</span><button onClick={() => setShowAddModal(true)} className="text-xs bg-white border px-2 py-1 rounded hover:bg-indigo-50 text-indigo-600 flex items-center gap-1"><Plus size={12}/> Add</button></div>
            <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -301,6 +312,7 @@ export default function EditorPage() {
         </nav>
 
         <div className="flex-1 bg-slate-100 relative z-10 flex flex-col overflow-hidden">
+           {/* EDIT MODE */}
            <div className={`flex-1 flex flex-col h-full bg-white animate-in slide-in-from-bottom-4 fade-in duration-300 ${viewMode === 'edit' ? 'block' : 'hidden'}`}>
                 <div className="p-4 border-b flex items-center justify-between bg-white"><button onClick={() => setViewMode('preview')} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2"><ArrowLeft size={16}/> Back to Preview</button><span className="font-bold text-slate-800 text-sm uppercase tracking-wider">Editing: {activeSectionId === 'basics' ? 'Basics' : resume.sections.find(s => s.id === activeSectionId)?.title}</span><div className="w-20"></div></div>
                 <div className="flex-1 overflow-y-auto p-8">
@@ -327,8 +339,8 @@ export default function EditorPage() {
                            <div key={section.id} className="space-y-6">
                               <div className="flex justify-between items-center border-b pb-4"><input className="text-xl font-bold text-slate-800 bg-transparent outline-none focus:bg-slate-50 rounded px-1 -ml-1" value={section.title} onChange={(e) => {const newSections = resume.sections.map(s => s.id === section.id ? { ...s, title: e.target.value } : s); updateResume({ ...resume, sections: newSections });}} /><button onClick={() => deleteSection(section.id)} className="text-red-500 p-2 hover:bg-red-50 rounded-full transition-colors"><Trash2 size={18}/></button></div>
                               <div className="flex gap-2 text-xs mb-4"><button onClick={() => {const newSections = resume.sections.map(s => s.id === section.id ? { ...s, column: 'left' as const } : s); updateResume({ ...resume, sections: newSections });}} className={`px-3 py-1 rounded border ${section.column === 'left' ? 'bg-slate-800 text-white' : 'bg-white'}`}>Sidebar</button><button onClick={() => {const newSections = resume.sections.map(s => s.id === section.id ? { ...s, column: 'right' as const } : s); updateResume({ ...resume, sections: newSections });}} className={`px-3 py-1 rounded border ${section.column !== 'left' ? 'bg-slate-800 text-white' : 'bg-white'}`}>Main Body</button></div>
-                              {section.type === 'text' && <div><RichTextToolbar onAction={(tag) => handleFormat(tag, section.id)} /><textarea ref={(el) => { if(activeSectionId === section.id) activeInputRef.current = el; }} className="w-full h-48 p-4 border rounded-lg text-sm leading-relaxed focus:ring-2 focus:ring-indigo-500 outline-none resize-none font-mono" value={section.content} onChange={(e) => {const newSections = resume.sections.map(s => s.id === section.id ? { ...s, content: e.target.value } : s); updateResume({ ...resume, sections: newSections });}} /></div>}
-                              {section.type === 'list' && <div className="space-y-6">{section.items.map(item => (<div key={item.id} className="p-5 border rounded-xl bg-slate-50/50 hover:bg-white hover:shadow-md transition-all relative group"><button onClick={() => removeItem(section.id, item.id)} className="absolute top-3 right-3 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button><div className="grid grid-cols-1 gap-3 mb-3"><Input label="Title (Company/School)" value={item.title} onChange={(v:string) => updateSectionItem(section.id, item.id, 'title', v)} /><div className="grid grid-cols-2 gap-3"><Input label="Subtitle (Role/Degree)" value={item.subtitle} onChange={(v:string) => updateSectionItem(section.id, item.id, 'subtitle', v)} /><Input label="Date" value={item.date} onChange={(v:string) => updateSectionItem(section.id, item.id, 'date', v)} /></div></div><div><RichTextToolbar onAction={(tag) => handleFormat(tag, section.id, item.id)} /><textarea ref={(el) => { if(activeSectionId === section.id) activeInputRef.current = el; }} className="w-full p-3 border rounded-lg text-sm min-h-[120px] focus:ring-indigo-500 outline-none resize-y font-mono" placeholder="Description..." value={item.description} onChange={(e) => updateSectionItem(section.id, item.id, 'description', e.target.value)} /></div></div>))}<button onClick={() => addSectionItem(section.id)} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all font-medium flex items-center justify-center gap-2">+ Add Item</button></div>}
+                              {section.type === 'text' && <div><WYSIWYGEditor label="Content" value={section.content} onChange={(val:string) => {const newSections = resume.sections.map(s => s.id === section.id ? { ...s, content: val } : s); updateResume({ ...resume, sections: newSections });}} /></div>}
+                              {section.type === 'list' && <div className="space-y-6">{section.items.map(item => (<div key={item.id} className="p-5 border rounded-xl bg-slate-50/50 hover:bg-white hover:shadow-md transition-all relative group"><button onClick={() => removeItem(section.id, item.id)} className="absolute top-3 right-3 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button><div className="grid grid-cols-1 gap-3 mb-3"><Input label="Title (Company/School)" value={item.title} onChange={(v:string) => updateSectionItem(section.id, item.id, 'title', v)} /><div className="grid grid-cols-2 gap-3"><Input label="Subtitle (Role/Degree)" value={item.subtitle} onChange={(v:string) => updateSectionItem(section.id, item.id, 'subtitle', v)} /><Input label="Date" value={item.date} onChange={(v:string) => updateSectionItem(section.id, item.id, 'date', v)} /></div></div><div><WYSIWYGEditor label="Description" value={item.description} onChange={(val:string) => updateSectionItem(section.id, item.id, 'description', val)} /></div></div>))}<button onClick={() => addSectionItem(section.id)} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all font-medium flex items-center justify-center gap-2">+ Add Item</button></div>}
                               {section.type === 'skills' && <div className="bg-slate-50 p-6 rounded-xl border"><label className="text-xs font-bold uppercase text-slate-500 mb-3 block">Skills (Comma Separated)</label><textarea className="w-full p-4 border rounded-lg text-sm h-32 focus:ring-2 focus:ring-indigo-500 outline-none resize-none bg-white" placeholder="React, Node.js..." value={section.items[0]?.tags?.join(', ')} onChange={(e) => {const tags = e.target.value.split(',').map(t => t.trim()); const newItems = [{ ...section.items[0], id: 'skills', tags }]; const newSections = resume.sections.map(s => s.id === section.id ? { ...s, items: newItems } : s); updateResume({ ...resume, sections: newSections });}}/></div>}
                               <div className="pt-6 border-t mt-8"><button onClick={manualSave} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex justify-center items-center gap-2 shadow-md shadow-indigo-200 transition-all active:scale-95"><Save size={18}/> Save {section.title}</button></div>
                            </div>
@@ -337,7 +349,9 @@ export default function EditorPage() {
                    </div>
                 </div>
              </div>
+           }
 
+           {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
               <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
               <div className="shadow-2xl origin-top transform scale-[0.55] sm:scale-[0.65] lg:scale-[0.80] transition-transform bg-transparent h-fit mb-20 mt-4 relative z-10 print:transform-none print:scale-100 print:shadow-none print:m-0">
@@ -350,6 +364,7 @@ export default function EditorPage() {
            </div>
         </div>
 
+        {/* COLUMN 3: RIGHT CONTROL CENTER */}
         <div className="w-[350px] bg-white border-l flex flex-col z-20 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
            <div className="flex border-b bg-slate-50"><button onClick={() => setActiveTab('design')} className={`flex-1 py-3 text-xs font-bold uppercase flex items-center justify-center gap-2 transition-colors ${activeTab === 'design' ? 'bg-white border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}><Palette size={14}/> Design</button><button onClick={() => setActiveTab('structure')} className={`flex-1 py-3 text-xs font-bold uppercase flex items-center justify-center gap-2 transition-colors ${activeTab === 'structure' ? 'bg-white border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}><Layers size={14}/> Structure</button></div>
            <div className="flex-1 overflow-hidden bg-slate-50/30 relative">
