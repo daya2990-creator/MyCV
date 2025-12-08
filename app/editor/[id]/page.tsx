@@ -78,15 +78,12 @@ const SAMPLE_RESUME: ResumeData = {
 // --- WYSIWYG EDITOR (FIXED CURSOR JUMPING) ---
 const WYSIWYGEditor = ({ value, onChange, label }: any) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const isFocused = useRef(false);
 
-  // Sync only if value changes AND element is NOT focused
-  // This prevents the cursor from jumping to the start while typing
   useEffect(() => {
-    if (
-      editorRef.current && 
-      document.activeElement !== editorRef.current && 
-      editorRef.current.innerHTML !== value
-    ) {
+    // Only update if the value is different AND we are NOT focused
+    // This prevents React from overwriting the DOM while you are typing
+    if (editorRef.current && !isFocused.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value || '';
     }
   }, [value]);
@@ -99,14 +96,13 @@ const WYSIWYGEditor = ({ value, onChange, label }: any) => {
 
   const execCmd = (cmd: string, val?: string) => {
     document.execCommand(cmd, false, val);
-    handleInput(); // Trigger update immediately
+    handleInput(); 
   };
 
   return (
     <div className="mb-4">
        {label && <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>}
        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
-          {/* Toolbar */}
           <div className="flex items-center gap-1 bg-slate-50 p-1.5 border-b border-slate-100">
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('bold');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bold"><Bold size={14}/></button>
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('italic');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Italic"><Italic size={14}/></button>
@@ -115,14 +111,14 @@ const WYSIWYGEditor = ({ value, onChange, label }: any) => {
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('insertUnorderedList');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bullet List"><List size={14}/></button>
           </div>
           
-          {/* Editable Area */}
           <div 
              ref={editorRef}
              contentEditable
              className="w-full p-4 text-sm min-h-[120px] max-h-[300px] overflow-y-auto outline-none prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4"
              onInput={handleInput}
-             // Initial load only, subsequent updates handled by useEffect safely
-             dangerouslySetInnerHTML={{ __html: value }} 
+             onFocus={() => { isFocused.current = true }}
+             onBlur={() => { isFocused.current = false }}
+             // CRITICAL FIX: Removed dangerouslySetInnerHTML
           />
        </div>
     </div>
@@ -142,6 +138,7 @@ export default function EditorPage() {
   const supabase = createClientComponentClient()
   
   const componentRef = useRef<HTMLDivElement>(null)
+  const activeInputRef = useRef<HTMLTextAreaElement | null>(null); 
 
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const [activeTab, setActiveTab] = useState<'design' | 'structure'>('design')
@@ -151,7 +148,7 @@ export default function EditorPage() {
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
-  const [isUnlocked, setIsUnlocked] = useState(false) // Tracks temporary unlock for print
+  const [isUnlocked, setIsUnlocked] = useState(false) 
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
@@ -193,7 +190,6 @@ export default function EditorPage() {
   const manualSave = () => { autoSave(resume); setViewMode('preview'); }
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
-  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -203,6 +199,7 @@ export default function EditorPage() {
   
   const moveSection = (index: number, direction: 'up' | 'down') => { const newSections = [...resume.sections]; if (direction === 'up' && index > 0) [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]]; else if (direction === 'down' && index < newSections.length - 1) [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]]; const newData = { ...resume, sections: newSections }; updateResume(newData); autoSave(newData); }
   const deleteSection = (id: string) => { if(!confirm('Delete section?')) return; const newData = { ...resume, sections: resume.sections.filter(s => s.id !== id) }; updateResume(newData); autoSave(newData); setActiveSectionId('basics'); }
+  
   const addPageBreak = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const breakSection: Section = { id, title: 'Page Break', type: 'break', isVisible: true, items: [], content: '', column: 'full' as const }; 
