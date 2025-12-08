@@ -75,45 +75,38 @@ const SAMPLE_RESUME: ResumeData = {
   ]
 };
 
-const RichTextToolbar = ({ onAction }: { onAction: (tag: string) => void }) => (
-  <div className="flex items-center gap-1 mb-2 bg-slate-100 p-1 rounded border border-slate-200 w-fit">
-    <button onClick={() => onAction('b')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Bold"><Bold size={14}/></button>
-    <button onClick={() => onAction('i')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Italic"><Italic size={14}/></button>
-    <button onClick={() => onAction('u')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Underline"><Underline size={14}/></button>
-    <div className="w-px h-4 bg-slate-300 mx-1"></div>
-    <button onClick={() => onAction('li')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Bullet List"><List size={14}/></button>
-    <button onClick={() => onAction('br')} className="p-1.5 hover:bg-white rounded text-slate-700 text-xs font-bold px-2" title="Line Break">BR</button>
-  </div>
-);
-
-// --- WYSIWYG EDITOR ---
+// --- WYSIWYG EDITOR (FIXED CURSOR JUMPING) ---
 const WYSIWYGEditor = ({ value, onChange, label }: any) => {
   const editorRef = useRef<HTMLDivElement>(null);
-  const isInternalUpdate = useRef(false);
 
+  // Sync only if value changes AND element is NOT focused
+  // This prevents the cursor from jumping to the start while typing
   useEffect(() => {
-    if (editorRef.current && !isInternalUpdate.current && editorRef.current.innerHTML !== value) {
+    if (
+      editorRef.current && 
+      document.activeElement !== editorRef.current && 
+      editorRef.current.innerHTML !== value
+    ) {
       editorRef.current.innerHTML = value || '';
     }
   }, [value]);
 
   const handleInput = () => {
     if (editorRef.current) {
-      isInternalUpdate.current = true;
       onChange(editorRef.current.innerHTML);
-      setTimeout(() => isInternalUpdate.current = false, 0);
     }
   };
 
   const execCmd = (cmd: string, val?: string) => {
     document.execCommand(cmd, false, val);
-    handleInput();
+    handleInput(); // Trigger update immediately
   };
 
   return (
     <div className="mb-4">
        {label && <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>}
        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
+          {/* Toolbar */}
           <div className="flex items-center gap-1 bg-slate-50 p-1.5 border-b border-slate-100">
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('bold');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bold"><Bold size={14}/></button>
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('italic');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Italic"><Italic size={14}/></button>
@@ -121,11 +114,14 @@ const WYSIWYGEditor = ({ value, onChange, label }: any) => {
              <div className="w-px h-4 bg-slate-300 mx-1"></div>
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('insertUnorderedList');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bullet List"><List size={14}/></button>
           </div>
+          
+          {/* Editable Area */}
           <div 
              ref={editorRef}
              contentEditable
              className="w-full p-4 text-sm min-h-[120px] max-h-[300px] overflow-y-auto outline-none prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4"
              onInput={handleInput}
+             // Initial load only, subsequent updates handled by useEffect safely
              dangerouslySetInnerHTML={{ __html: value }} 
           />
        </div>
@@ -146,7 +142,6 @@ export default function EditorPage() {
   const supabase = createClientComponentClient()
   
   const componentRef = useRef<HTMLDivElement>(null)
-  const activeInputRef = useRef<HTMLTextAreaElement | null>(null); 
 
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const [activeTab, setActiveTab] = useState<'design' | 'structure'>('design')
@@ -156,7 +151,7 @@ export default function EditorPage() {
   const [isPremium, setIsPremium] = useState(false) 
   const [showAddModal, setShowAddModal] = useState(false)
   const [credits, setCredits] = useState(0)
-  const [isUnlocked, setIsUnlocked] = useState(false) 
+  const [isUnlocked, setIsUnlocked] = useState(false) // Tracks temporary unlock for print
   
   const [newSectionName, setNewSectionName] = useState('')
   const [newSectionType, setNewSectionType] = useState<'text'|'list'|'skills'>('list')
@@ -198,16 +193,7 @@ export default function EditorPage() {
   const manualSave = () => { autoSave(resume); setViewMode('preview'); }
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
-  const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
-    const textarea = activeInputRef.current; if (!textarea) return;
-    const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
-    let insertText = tag === 'br' ? "<br/>" : tag === 'li' ? `<li>${text.slice(start, end)}</li>` : `<${tag}>${text.slice(start, end)}</${tag}>`;
-    const newText = text.slice(0, start) + insertText + text.slice(end);
-    if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
-    else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
-    setTimeout(() => textarea.focus(), 0);
-  };
-
+  // --- SECTION LOGIC ---
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -229,9 +215,8 @@ export default function EditorPage() {
   const removeItem = (sectionId: string, itemId: string) => { const newSections = resume.sections.map(s => { if (s.id !== sectionId) return s; return { ...s, items: s.items.filter(i => i.id !== itemId) }; }); updateResume({ ...resume, sections: newSections }); }
   const loadSample = () => { if(confirm('Overwrite with sample data?')) { updateResume(SAMPLE_RESUME); autoSave(SAMPLE_RESUME); } }
 
-  // FIX: Updated to use 'content' prop for react-to-print v2
   const handlePrint = useReactToPrint({ 
-    content: () => componentRef.current,
+    content: () => componentRef.current, 
     documentTitle: resume.basics.fullName || 'Resume',
     onAfterPrint: () => setIsUnlocked(false)
   });
@@ -241,12 +226,14 @@ export default function EditorPage() {
 
     const template = TEMPLATES[selectedTemplate];
 
+    // 1. Premium Template
     if (template.tier === 'premium') {
         alert("This is a Premium Template.\nUpgrade to Premium (₹199/mo) to use this design.");
         router.push('/pricing');
         return;
     }
 
+    // 2. Standard/Free Template
     if (credits > 0) {
          if (confirm(`Use 1 Credit to remove watermark? (${credits} remaining)\n\nCancel = Download with Watermark`)) {
              try {
@@ -271,6 +258,7 @@ export default function EditorPage() {
          }
     }
     
+    // Fallback: Download with Watermark
     handlePrint(); 
   }
 
