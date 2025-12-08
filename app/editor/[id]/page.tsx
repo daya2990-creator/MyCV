@@ -19,7 +19,6 @@ import {
   ResumeData, Section, SectionItem 
 } from '../../../components/ResumeTemplates'
 
-// --- TEMPLATE TIER CONFIG ---
 const TEMPLATES: Record<string, any> = {
   // FREE (Basic)
   't1':  { component: Template1, name: "Structure", category: 'modern', tier: 'free' },
@@ -76,13 +75,22 @@ const SAMPLE_RESUME: ResumeData = {
   ]
 };
 
-// --- NEW WYSIWYG EDITOR COMPONENT ---
-// This replaces the old textarea with a "Word-like" editor
+const RichTextToolbar = ({ onAction }: { onAction: (tag: string) => void }) => (
+  <div className="flex items-center gap-1 mb-2 bg-slate-100 p-1 rounded border border-slate-200 w-fit">
+    <button onClick={() => onAction('b')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Bold"><Bold size={14}/></button>
+    <button onClick={() => onAction('i')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Italic"><Italic size={14}/></button>
+    <button onClick={() => onAction('u')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Underline"><Underline size={14}/></button>
+    <div className="w-px h-4 bg-slate-300 mx-1"></div>
+    <button onClick={() => onAction('li')} className="p-1.5 hover:bg-white rounded text-slate-700" title="Bullet List"><List size={14}/></button>
+    <button onClick={() => onAction('br')} className="p-1.5 hover:bg-white rounded text-slate-700 text-xs font-bold px-2" title="Line Break">BR</button>
+  </div>
+);
+
+// --- WYSIWYG EDITOR ---
 const WYSIWYGEditor = ({ value, onChange, label }: any) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternalUpdate = useRef(false);
 
-  // Sync external value changes to editor (only if not focused or completely different)
   useEffect(() => {
     if (editorRef.current && !isInternalUpdate.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value || '';
@@ -99,14 +107,13 @@ const WYSIWYGEditor = ({ value, onChange, label }: any) => {
 
   const execCmd = (cmd: string, val?: string) => {
     document.execCommand(cmd, false, val);
-    handleInput(); // Trigger update immediately
+    handleInput();
   };
 
   return (
     <div className="mb-4">
        {label && <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>}
        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
-          {/* Toolbar */}
           <div className="flex items-center gap-1 bg-slate-50 p-1.5 border-b border-slate-100">
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('bold');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bold"><Bold size={14}/></button>
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('italic');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Italic"><Italic size={14}/></button>
@@ -114,8 +121,6 @@ const WYSIWYGEditor = ({ value, onChange, label }: any) => {
              <div className="w-px h-4 bg-slate-300 mx-1"></div>
              <button onMouseDown={(e) => {e.preventDefault(); execCmd('insertUnorderedList');}} className="p-1.5 hover:bg-white rounded text-slate-600 hover:text-indigo-600" title="Bullet List"><List size={14}/></button>
           </div>
-          
-          {/* Editable Area */}
           <div 
              ref={editorRef}
              contentEditable
@@ -129,7 +134,7 @@ const WYSIWYGEditor = ({ value, onChange, label }: any) => {
 };
 
 const Input = ({ label, value, onChange }: any) => (
-  <div className="mb-3">
+  <div>
     <label className="text-[11px] uppercase font-bold text-slate-400 mb-1.5 block tracking-wider">{label}</label>
     <input className="w-full p-3 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" value={value || ''} onChange={(e) => onChange(e.target.value)}/>
   </div>
@@ -141,6 +146,7 @@ export default function EditorPage() {
   const supabase = createClientComponentClient()
   
   const componentRef = useRef<HTMLDivElement>(null)
+  const activeInputRef = useRef<HTMLTextAreaElement | null>(null); 
 
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const [activeTab, setActiveTab] = useState<'design' | 'structure'>('design')
@@ -192,7 +198,16 @@ export default function EditorPage() {
   const manualSave = () => { autoSave(resume); setViewMode('preview'); }
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file && file.size < 500000) { const reader = new FileReader(); reader.onloadend = () => { const newData = { ...resume, basics: { ...resume.basics, image: reader.result as string } }; updateResume(newData); autoSave(newData); }; reader.readAsDataURL(file); } else if (file) alert("Image too large (Max 500KB)"); };
 
-  // --- SECTION LOGIC ---
+  const handleFormat = (tag: string, sectionId: string, itemId?: string) => {
+    const textarea = activeInputRef.current; if (!textarea) return;
+    const start = textarea.selectionStart; const end = textarea.selectionEnd; const text = textarea.value;
+    let insertText = tag === 'br' ? "<br/>" : tag === 'li' ? `<li>${text.slice(start, end)}</li>` : `<${tag}>${text.slice(start, end)}</${tag}>`;
+    const newText = text.slice(0, start) + insertText + text.slice(end);
+    if (itemId) updateSectionItem(sectionId, itemId, 'description', newText);
+    else { const newSections = resume.sections.map(s => s.id === sectionId ? { ...s, content: newText } : s); updateResume({ ...resume, sections: newSections }); }
+    setTimeout(() => textarea.focus(), 0);
+  };
+
   const addSection = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const newSection: Section = { id, title: newSectionName || 'New Section', type: newSectionType, isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -202,7 +217,6 @@ export default function EditorPage() {
   
   const moveSection = (index: number, direction: 'up' | 'down') => { const newSections = [...resume.sections]; if (direction === 'up' && index > 0) [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]]; else if (direction === 'down' && index < newSections.length - 1) [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]]; const newData = { ...resume, sections: newSections }; updateResume(newData); autoSave(newData); }
   const deleteSection = (id: string) => { if(!confirm('Delete section?')) return; const newData = { ...resume, sections: resume.sections.filter(s => s.id !== id) }; updateResume(newData); autoSave(newData); setActiveSectionId('basics'); }
-  
   const addPageBreak = () => { 
       const id = Math.random().toString(36).substr(2, 9); 
       const breakSection: Section = { id, title: 'Page Break', type: 'break', isVisible: true, items: [], content: '', column: 'full' as const }; 
@@ -215,8 +229,9 @@ export default function EditorPage() {
   const removeItem = (sectionId: string, itemId: string) => { const newSections = resume.sections.map(s => { if (s.id !== sectionId) return s; return { ...s, items: s.items.filter(i => i.id !== itemId) }; }); updateResume({ ...resume, sections: newSections }); }
   const loadSample = () => { if(confirm('Overwrite with sample data?')) { updateResume(SAMPLE_RESUME); autoSave(SAMPLE_RESUME); } }
 
+  // FIX: Updated to use 'content' prop for react-to-print v2
   const handlePrint = useReactToPrint({ 
-    contentRef: componentRef, 
+    content: () => componentRef.current,
     documentTitle: resume.basics.fullName || 'Resume',
     onAfterPrint: () => setIsUnlocked(false)
   });
@@ -250,13 +265,12 @@ export default function EditorPage() {
              return;
          }
     } else {
-         if (confirm(`📄 Download Options\n\nClick OK to remove the watermark for ₹39.\nClick CANCEL to download for FREE with watermark.`)) {
+         if (confirm("Remove Watermark for ₹39?\n\nClick OK to Pay.\nClick Cancel to Download FREE (Watermarked).")) {
              router.push('/pricing');
              return;
          }
     }
     
-    // Fallback: Download with Watermark
     handlePrint(); 
   }
 
@@ -349,7 +363,6 @@ export default function EditorPage() {
                    </div>
                 </div>
              </div>
-           }
 
            {/* PREVIEW MODE */}
            <div className={`absolute inset-0 overflow-auto p-8 flex justify-center items-start bg-[#eef2f6] ${viewMode === 'preview' ? 'z-20 opacity-100' : 'z-0 opacity-0 pointer-events-none'}`}>
