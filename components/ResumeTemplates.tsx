@@ -144,7 +144,8 @@ const RichText: React.FC<{ content?: string; className?: string }> = ({ content,
   if (!content) return null;
   // Safety: Ensure content is a string to prevent "Objects are not valid as a React child" errors if malformed data is passed
   const safeContent = typeof content === 'string' ? content : String(content);
-  return <div className={`rte-content ${className}`} dangerouslySetInnerHTML={{ __html: safeContent }} />;
+  // Added break-words to ensure long text wraps correctly
+  return <div className={`rte-content break-words ${className}`} dangerouslySetInnerHTML={{ __html: safeContent }} />;
 };
 
 const SectionRenderer: React.FC<{
@@ -174,7 +175,8 @@ const SectionRenderer: React.FC<{
         {section.title}
       </h3>
 
-      {section.type === 'text' && <RichText content={section.content} className={`leading-relaxed text-slate-700 ${styles.body} ${textColor}`} />}
+      {/* Added whitespace-pre-wrap to handle newlines (Enter key) in text blocks correctly */}
+      {section.type === 'text' && <RichText content={section.content} className={`leading-relaxed text-slate-700 ${styles.body} ${textColor} whitespace-pre-wrap`} />}
 
       {section.type === 'skills' && (
         <div className="flex flex-wrap gap-2" role="list">
