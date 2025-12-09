@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, Mail, Link as LinkIcon } from 'lucide-react';
+import { MapPin, Phone, Mail, Link as LinkIcon, Github, Linkedin } from 'lucide-react';
 
 // --- DATA TYPES ---
 export type SectionItem = {
@@ -139,7 +139,7 @@ const MultiPageWrapper = ({ data, theme, renderPage, pageStyle, className = "", 
   );
 };
 
-// --- TEMPLATES ---
+// --- TEMPLATES 1-20 ---
 
 export const Template1 = ({ data, theme, isPremium }: TemplateProps) => (
   <MultiPageWrapper 
@@ -152,18 +152,7 @@ export const Template1 = ({ data, theme, isPremium }: TemplateProps) => (
       return (
         <div className="flex h-full text-slate-800">
           <div className="w-[32%] p-8 border-r border-slate-200/50 min-h-[297mm]">
-            {index === 0 && (
-              <div className="mb-10">
-                {data.basics.image && <img src={data.basics.image} className="w-32 h-32 rounded-full object-cover mb-6 border-4 border-white shadow-md mx-auto" alt="Profile"/>}
-                <h1 className={`font-bold leading-tight mb-2 ${styles.name}`} style={{ color: theme.color }}>{data.basics.fullName}</h1>
-                <p className={`font-bold uppercase tracking-widest text-slate-500 ${styles.job}`}>{data.basics.jobTitle}</p>
-                <div className={`space-y-3 text-slate-600 mt-8 ${styles.contact}`}>
-                  <div className="flex gap-3 items-center"><Mail size={14}/> <span className="break-all">{data.basics.email}</span></div>
-                  <div className="flex gap-3 items-center"><Phone size={14}/> {data.basics.phone}</div>
-                  {data.basics.location && <div className="flex gap-3 items-center"><MapPin size={14}/> {data.basics.location}</div>}
-                </div>
-              </div>
-            )}
+            {index === 0 && <div className="mb-10">{data.basics.image && <img src={data.basics.image} className="w-32 h-32 rounded-full object-cover mb-6 border-4 border-white shadow-md mx-auto" alt="Profile"/>}<h1 className={`font-bold leading-tight mb-2 ${styles.name}`} style={{ color: theme.color }}>{data.basics.fullName}</h1><p className={`font-bold uppercase tracking-widest text-slate-500 ${styles.job}`}>{data.basics.jobTitle}</p><div className={`space-y-3 text-slate-600 mt-8 ${styles.contact}`}><div className="flex gap-3 items-center"><Mail size={14}/> <span className="break-all">{data.basics.email}</span></div><div className="flex gap-3 items-center"><Phone size={14}/> {data.basics.phone}</div>{data.basics.location && <div className="flex gap-3 items-center"><MapPin size={14}/> {data.basics.location}</div>}</div></div>}
             {left.map((s:any) => <SectionRenderer key={s.id} section={s} theme={theme} />)}
           </div>
           <div className="w-[68%] p-10">
@@ -259,18 +248,8 @@ export const Template8 = ({ data, theme, isPremium }: TemplateProps) => (
       return (
         <div className="w-full h-full flex text-white">
            <div className="w-[30%] p-8 border-r border-slate-700 min-h-[297mm]">
-              {index === 0 && (
-                 <div className="text-center mb-10 pb-8 border-b border-slate-700 pt-4">
-                    {data.basics.image ? (
-                       <img src={data.basics.image} className="w-28 h-28 mx-auto rounded-full object-cover border-4 border-slate-600 mb-4" alt="Profile"/>
-                    ) : (
-                       <div className="w-20 h-20 mx-auto bg-slate-700 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2" style={{borderColor: theme.color}}>{data.basics.fullName[0]}</div>
-                    )}
-                    <h1 className={`font-bold leading-tight text-white ${styles.name}`}>{data.basics.fullName}</h1>
-                    <div className={`text-slate-400 mt-2 font-mono break-all ${styles.contact}`}>{data.basics.email}</div>
-                 </div>
-              )}
-              {left.map((s:any) => <div key={s.id} className="mb-8"><SectionRenderer section={s} theme={theme} {...lightTextProps} /></div>)}
+              {index === 0 && <div className="text-center mb-10 pb-8 border-b border-slate-700 pt-4">{data.basics.image ? <img src={data.basics.image} className="w-28 h-28 mx-auto rounded-full object-cover border-4 border-slate-600 mb-4" alt="Profile"/> : <div className="w-20 h-20 mx-auto bg-slate-700 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2" style={{borderColor: theme.color}}>{data.basics.fullName[0]}</div>}<h1 className={`font-bold leading-tight text-white ${styles.name}`}>{data.basics.fullName}</h1><div className={`text-slate-400 mt-2 font-mono break-all ${styles.contact}`}>{data.basics.email}</div></div>}
+              {left.map((s:any) => <div key={s.id} className="mb-6"><SectionRenderer section={s} theme={theme} {...lightTextProps} /></div>)}
            </div>
            <div className="w-[70%] p-12 text-slate-300 min-h-[297mm]">
               {right.map((s:any) => <SectionRenderer key={s.id} section={s} theme={theme} {...lightTextProps} />)}
@@ -294,16 +273,7 @@ export const Template9 = ({ data, theme, isPremium }: TemplateProps) => (
            <div className="w-[30%] p-8 min-h-[297mm]">
              {index === 0 && (
                <div className="mb-10">
-                  {data.basics.image && <img src={data.basics.image} className="w-24 h-24 rounded-lg object-cover shadow-sm mb-6" alt="Profile"/>}
-                  <h1 className={`font-bold text-slate-900 leading-none mb-2 break-words ${styles.name}`}>{data.basics.fullName}</h1>
-                  <p className={`font-bold uppercase tracking-widest text-slate-500 ${styles.job}`}>{data.basics.jobTitle}</p>
-                  <div className={`mt-8 space-y-2 ${styles.contact}`}>
-                     <div className="font-bold text-slate-400 uppercase mb-1" style={{fontSize: '10px'}}>CONTACT</div>
-                     <div className="break-all">{data.basics.email}</div>
-                     <div>{data.basics.phone}</div>
-                  </div>
-               </div>
-             )}
+                  {data.basics.image && <><img src={data.basics.image} className="w-24 h-24 rounded-lg object-cover shadow-sm mb-6" alt="Profile" /><h1 className={`font-bold text-slate-900 leading-none mb-2 break-words ${styles.name}`}>{data.basics.fullName}</h1><p className={`font-bold uppercase tracking-widest text-slate-500 ${styles.job}`}>{data.basics.jobTitle}</p><div className={`mt-8 space-y-2 ${styles.contact}`}><div className="font-bold text-slate-400 uppercase mb-1" style={{ fontSize: '10px' }}>CONTACT</div><div className="break-all">{data.basics.email}</div><div>{data.basics.phone}</div></div></>}</div>)}
              {left.map((s:any) => <div key={s.id} className="mb-8"><SectionRenderer section={s} theme={theme}/></div>)}
           </div>
           <div className="w-[70%] p-12">
@@ -352,7 +322,23 @@ export const Template12 = ({data, theme, isPremium}: TemplateProps) => (
 );
 
 export const Template13 = ({data, theme, isPremium}: TemplateProps) => (
-  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} pageStyle={{ background: `linear-gradient(to right, #0f172a 100px, #ffffff 100px)` }} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return <div className="flex h-full font-sans text-slate-800"><div className="w-[100px] flex items-center justify-center text-white min-h-[297mm]">{i===0 && <div className="writing-vertical-lr transform rotate-180 text-5xl font-black tracking-widest opacity-20 uppercase whitespace-nowrap">{data.basics.fullName.split(' ')[0]}</div>}</div><div className="flex-1 p-12">{i===0 && <div className="mb-12"><h1 className="text-7xl font-black text-slate-900 mb-2 leading-none">{data.basics.fullName}</h1><p className={`font-medium text-slate-400 mb-10 ${styles.job}`}>{data.basics.jobTitle}</p></div>}<div className="grid grid-cols-2 gap-16"><div className="space-y-10">{right.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}</div><div className="space-y-10">{i===0 && <div className="bg-slate-50 p-8 rounded-3xl space-y-3"><div className="text-xs font-bold uppercase text-slate-400">Contact</div><div className={`text-base ${styles.contact}`}>{data.basics.email}<br/>{data.basics.phone}</div></div>}{left.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}</div></div></div></div>}} />
+  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} pageStyle={{ background: `linear-gradient(to right, #0f172a 100px, #ffffff 100px)` }} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return (
+    <div className="flex h-full font-sans text-slate-800">
+      <div className="w-[100px] flex items-center justify-center text-white min-h-[297mm]">
+        {i===0 && <div className="writing-vertical-lr transform rotate-180 text-5xl font-black tracking-widest opacity-20 uppercase whitespace-nowrap">{data.basics.fullName.split(' ')[0]}</div>}
+      </div>
+      <div className="flex-1 p-12">
+        {i===0 && <div className="mb-12"><h1 className="text-7xl font-black text-slate-900 mb-2 leading-none">{data.basics.fullName}</h1><p className={`font-medium text-slate-400 mb-10 ${styles.job}`}>{data.basics.jobTitle}</p></div>}
+        <div className="grid grid-cols-2 gap-16">
+          <div className="space-y-10">{right.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}</div>
+          <div className="space-y-10">
+            {i===0 && <div className="bg-slate-50 p-8 rounded-3xl space-y-3"><div className="text-xs font-bold uppercase text-slate-400">Contact</div><div className={`text-base ${styles.contact}`}>{data.basics.email}<br/>{data.basics.phone}</div></div>}
+            {left.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  )}} />
 );
 
 export const Template14 = ({data, theme, isPremium}: TemplateProps) => (
@@ -365,19 +351,58 @@ export const Template14 = ({data, theme, isPremium}: TemplateProps) => (
 );
 
 export const Template15 = ({data, theme, isPremium}: TemplateProps) => (
-  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return <div className="p-12 font-sans text-slate-800">{i===0 && <div className="flex justify-between items-start mb-16"><div><h1 className={`font-bold text-slate-900 tracking-tight ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`text-right font-medium text-slate-400 space-y-1 ${styles.contact}`}><p>{data.basics.email}</p><p>{data.basics.phone}</p></div></div>}<div className="grid grid-cols-4 gap-12"><div className="col-span-1 space-y-12 pt-4 border-t border-slate-200">{left.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}</div><div className="col-span-3 space-y-12 pt-4 border-t border-slate-900">{right.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}</div></div></div>}} />
+  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return (
+    <div className="p-12 font-sans text-slate-800">
+      {i===0 && <div className="flex justify-between items-start mb-16"><div><h1 className={`font-bold text-slate-900 tracking-tight ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`text-right font-medium text-slate-400 space-y-1 ${styles.contact}`}><p>{data.basics.email}</p><p>{data.basics.phone}</p></div></div>}
+      <div className="grid grid-cols-4 gap-12">
+        <div className="col-span-1 space-y-12 pt-4 border-t border-slate-200">{left.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}</div>
+        <div className="col-span-3 space-y-12 pt-4 border-t border-slate-900">{right.map((sec:any)=><SectionRenderer key={sec.id} section={sec} theme={theme}/>)}</div>
+      </div>
+    </div>
+  )}} />
 );
 
 export const Template16 = ({data, theme, isPremium}: TemplateProps) => (
-  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} pageStyle={{ background: '#000000', color: '#4ade80' }} renderPage={(s: any, i: number, styles: any) => { const lightTextProps = { textColor: "text-green-400", subTextColor: "text-green-600", dateColor: "text-green-600", tagBg: "bg-green-900/30", tagText: "text-green-400", tagBorder: "border-green-800" }; return <div className="bg-black text-green-400 p-10 font-mono text-xs h-full"><div className="border border-green-800 p-10 h-full">{i===0 && <header className="border-b border-green-800 pb-10 mb-10 flex justify-between"><div><h1 className={`font-bold mb-2 glitch-text ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`text-right opacity-70 ${styles.contact}`}><div>{data.basics.email}</div></div></header>}<div className="grid grid-cols-2 gap-10"><div>{s.filter((_:any,idx:number)=>idx%2===0).map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="text-green-600 font-bold mb-4 text-base">{`> ${sec.title.toUpperCase()}`}</h3><div className="border-l border-green-900 pl-6"><SectionRenderer section={{...sec, title:''}} theme={theme} {...lightTextProps}/></div></div>)}</div><div>{s.filter((_:any,idx:number)=>idx%2!==0).map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="text-green-600 font-bold mb-4 text-base">{`> ${sec.title.toUpperCase()}`}</h3><SectionRenderer section={{...sec, title:''}} theme={theme} {...lightTextProps}/></div>)}</div></div></div></div>}} />
+  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} pageStyle={{ background: '#000000', color: '#4ade80' }} renderPage={(s: any, i: number, styles: any) => { const lightTextProps = { textColor: "text-green-400", subTextColor: "text-green-600", dateColor: "text-green-600", tagBg: "bg-green-900/30", tagText: "text-green-400", tagBorder: "border-green-800" }; return (
+    <div className="bg-black text-green-400 p-10 font-mono text-xs h-full">
+      <div className="border border-green-800 p-10 h-full">
+        {i===0 && <header className="border-b border-green-800 pb-10 mb-10 flex justify-between"><div><h1 className={`font-bold mb-2 glitch-text ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`text-right opacity-70 ${styles.contact}`}><div>{data.basics.email}</div></div></header>}
+        <div className="grid grid-cols-2 gap-10">
+          <div>{s.filter((_:any,idx:number)=>idx%2===0).map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="text-green-600 font-bold mb-4 text-base">{`> ${sec.title.toUpperCase()}`}</h3><div className="border-l border-green-900 pl-6"><SectionRenderer section={{...sec, title:''}} theme={theme} {...lightTextProps}/></div></div>)}</div>
+          <div>{s.filter((_:any,idx:number)=>idx%2!==0).map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="text-green-600 font-bold mb-4 text-base">{`> ${sec.title.toUpperCase()}`}</h3><SectionRenderer section={{...sec, title:''}} theme={theme} {...lightTextProps}/></div>)}</div>
+        </div>
+      </div>
+    </div>
+  )}} />
 );
 
 export const Template17 = ({data, theme, isPremium}: TemplateProps) => (
-  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return <div className="p-8 font-sans text-slate-900">{i===0 && <div className="flex justify-between border-b-2 border-black pb-4 mb-8"><div className="flex gap-6 items-baseline"><h1 className={`font-bold uppercase ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`flex gap-6 ${styles.contact}`}><span>{data.basics.email}</span></div></div>}<div className="grid grid-cols-12 gap-6 text-sm"><div className="col-span-3 space-y-8 border-r border-slate-200 pr-6">{left.map((sec:any)=><div key={sec.id}><h3 className="font-bold border-b border-black mb-1">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div><div className="col-span-9 space-y-8">{right.map((sec:any)=><div key={sec.id}><h3 className="font-bold border-b border-black mb-1">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div></div></div>}} />
+  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return (
+    <div className="p-8 font-sans text-slate-900">
+      {i===0 && <div className="flex justify-between border-b-2 border-black pb-4 mb-8"><div className="flex gap-6 items-baseline"><h1 className={`font-bold uppercase ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`flex gap-6 ${styles.contact}`}><span>{data.basics.email}</span></div></div>}
+      <div className="grid grid-cols-12 gap-6 text-sm">
+        <div className="col-span-3 space-y-8 border-r border-slate-200 pr-6">{left.map((sec:any)=><div key={sec.id}><h3 className="font-bold border-b border-black mb-1">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div>
+        <div className="col-span-9 space-y-8">{right.map((sec:any)=><div key={sec.id}><h3 className="font-bold border-b border-black mb-1">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div>
+      </div>
+    </div>
+  )}} />
 );
 
 export const Template18 = ({data, theme, isPremium}: TemplateProps) => (
-  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return <div className="flex flex-col font-sans h-full">{i===0 && <div className="h-[250px] flex items-center justify-center text-white text-center p-10" style={{backgroundColor:theme.color}}><div><h1 className={`font-bold mb-4 ${styles.name}`}>{data.basics.fullName}</h1></div></div>}<div className="flex-1 p-12 grid grid-cols-2 gap-16 text-slate-800"><div className="space-y-10 text-center">{i===0 && <div className={styles.contact}>{data.basics.email}<br/>{data.basics.phone}</div>}{left.map((sec:any)=><div key={sec.id}><div className="inline-block border-b-2 border-black pb-1 px-4 mb-4 font-bold uppercase tracking-widest">{sec.title}</div><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div><div className="space-y-10 text-center border-l border-slate-100 pl-16">{right.map((sec:any)=><div key={sec.id}><h3 className="font-bold text-xl mb-6">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div></div></div>}} />
+  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return (
+    <div className="flex flex-col font-sans h-full">
+      {i===0 && <div className="h-[250px] flex items-center justify-center text-white text-center p-10" style={{backgroundColor:theme.color}}><div><h1 className={`font-bold mb-4 ${styles.name}`}>{data.basics.fullName}</h1></div></div>}
+      <div className="flex-1 p-12 grid grid-cols-2 gap-16 text-slate-800">
+        <div className="space-y-10 text-center">
+          {i===0 && <div className={styles.contact}>{data.basics.email}<br/>{data.basics.phone}</div>}
+          {left.map((sec:any)=><div key={sec.id}><div className="inline-block border-b-2 border-black pb-1 px-4 mb-4 font-bold uppercase tracking-widest">{sec.title}</div><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}
+        </div>
+        <div className="space-y-10 text-center border-l border-slate-100 pl-16">
+          {right.map((sec:any)=><div key={sec.id}><h3 className="font-bold text-xl mb-6">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}
+        </div>
+      </div>
+    </div>
+  )}} />
 );
 
 export const Template19 = ({data, theme, isPremium}: TemplateProps) => (
@@ -385,5 +410,13 @@ export const Template19 = ({data, theme, isPremium}: TemplateProps) => (
 );
 
 export const Template20 = ({data, theme, isPremium}: TemplateProps) => (
-  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return <div className="bg-slate-100 p-10 font-sans text-slate-800 flex flex-col gap-6 h-full">{i===0 && <div className="bg-white p-8 rounded shadow-sm flex justify-between items-center"><div><h1 className={`font-bold ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`text-right ${styles.contact}`}><div>{data.basics.email}</div></div></div>}<div className="flex gap-6 flex-1"><div className="w-1/3 flex flex-col gap-6"><div className="bg-white p-8 rounded shadow-sm flex-1">{left.map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="font-bold border-b pb-2 mb-4">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div></div><div className="w-2/3 bg-white p-8 rounded shadow-sm">{right.map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="font-bold border-b pb-2 mb-4">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div></div></div>}} />
+  <MultiPageWrapper data={data} theme={theme} isPremium={isPremium} renderPage={(s: any, i: number, styles: any) => { const {left, right} = getPageColumns(s); return (
+    <div className="bg-slate-100 p-10 font-sans text-slate-800 flex flex-col gap-6 h-full">
+      {i===0 && <div className="bg-white p-8 rounded shadow-sm flex justify-between items-center"><div><h1 className={`font-bold ${styles.name}`}>{data.basics.fullName}</h1></div><div className={`text-right ${styles.contact}`}><div>{data.basics.email}</div></div></div>}
+      <div className="flex gap-6 flex-1">
+        <div className="w-1/3 flex flex-col gap-6"><div className="bg-white p-8 rounded shadow-sm flex-1">{left.map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="font-bold border-b pb-2 mb-4">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div></div>
+        <div className="w-2/3 bg-white p-8 rounded shadow-sm">{right.map((sec:any)=><div key={sec.id} className="mb-8"><h3 className="font-bold border-b pb-2 mb-4">{sec.title}</h3><SectionRenderer section={{...sec, title:''}} theme={theme}/></div>)}</div>
+      </div>
+    </div>
+  )}} />
 );
