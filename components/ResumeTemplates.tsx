@@ -118,8 +118,10 @@ const usePages = (sections: Section[]) => {
 };
 
 const getPageColumns = (pageSections: Section[]) => {
+  // Fix: Ensure all sections are captured. 
+  // If column is 'left', it goes left. Everything else (right, full, undefined, null) goes to the main content area (right).
   const left = pageSections.filter((s) => s.column === 'left');
-  const right = pageSections.filter((s) => s.column === 'right' || s.column === undefined);
+  const right = pageSections.filter((s) => s.column !== 'left'); 
   return { left, right, full: pageSections };
 };
 
